@@ -441,7 +441,7 @@ View(){
 	echo -e " 端口：${Green_font_prefix}${port}${Font_color_suffix}"
 	echo -e " 密码：${Green_font_prefix}${password}${Font_color_suffix}"
 	echo -e " 加密：${Green_font_prefix}${cipher}${Font_color_suffix}"
-	echo -e " TFO：${Green_font_prefix}${tfo}${Font_color_suffix}"
+	echo -e " TFO ：${Green_font_prefix}${tfo}${Font_color_suffix}"
 	echo -e "——————————————————————————————————"
 	[[ ! -z "${link_ipv4}" ]] && echo -e "${link_ipv4}"
 	[[ ! -z "${link_ipv6}" ]] && echo -e "${link_ipv6}"
