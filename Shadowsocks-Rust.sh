@@ -5,12 +5,12 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust
-#	Version: 1.0.1
+#	Version: 1.0.2
 #	Author: 佩佩
 #	WebSite: http://nan.ge
 #=================================================
 
-sh_ver="1.0.1"
+sh_ver="1.0.2"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -146,7 +146,7 @@ Write_config(){
     "server_port": ${port},
     "password": "${password}",
     "method": "${cipher}",
-    "fast_open": true,
+    "fast_open": ${tfo},
     "mode": "tcp_and_udp"
 }
 EOF
@@ -157,6 +157,7 @@ Read_config(){
 	port=$(cat ${CONF}|jq -r '.server_port')
 	password=$(cat ${CONF}|jq -r '.password')
 	cipher=$(cat ${CONF}|jq -r '.method')
+	tfo=$(cat ${CONF}|jq -r '.fast_open')
 }
 
 Set_port(){
@@ -179,6 +180,15 @@ Set_port(){
 			echo "输入错误, 请输入正确的端口。"
 		fi
 		done
+}
+
+Set_tfo(){
+	echo "是否开启 TCP Fast Open（true 或 false）?"
+	read -e -p "(默认: true):" tfo
+	[[ -z "${tfo}" ]] && tfo=true
+	echo && echo "========================"
+	echo -e "	TCP Fast Open 开启状态 : ${Red_background_prefix} ${tfo} ${Font_color_suffix}"
+	echo "========================" && echo
 }
 
 Set_password(){
@@ -248,9 +258,9 @@ Set(){
  ${Green_font_prefix}1.${Font_color_suffix}  修改 端口配置
  ${Green_font_prefix}2.${Font_color_suffix}  修改 密码配置
  ${Green_font_prefix}3.${Font_color_suffix}  修改 加密配置
+ ${Green_font_prefix}4.${Font_color_suffix}  修改 TFO 配置
 ——————————————————————————————————
- ${Green_font_prefix}4.${Font_color_suffix}  修改 全部配置
-——————————————————————————————————" && echo
+ ${Green_font_prefix}5.${Font_color_suffix}  修改 全部配置" && echo
 	read -e -p "(默认: 取消):" modify
 	[[ -z "${modify}" ]] && echo "已取消..." && exit 1
 	if [[ "${modify}" == "1" ]]; then
@@ -258,6 +268,7 @@ Set(){
 		Set_port
 		password=${password}
 		cipher=${cipher}
+		tfo=${tfo}
 		Write_config
 		Restart
 	elif [[ "${modify}" == "2" ]]; then
@@ -265,6 +276,7 @@ Set(){
 		Set_password
 		port=${port}
 		cipher=${cipher}
+		tfo=${tfo}
 		Write_config
 		Restart
 	elif [[ "${modify}" == "3" ]]; then
@@ -272,17 +284,27 @@ Set(){
 		Set_cipher
 		port=${port}
 		password=${password}
+		tfo=${tfo}
 		Write_config
 		Restart
 	elif [[ "${modify}" == "4" ]]; then
 		Read_config
+		Set_tfo
+		cipher=${cipher}
+		port=${port}
+		password=${password}
+		Write_config
+		Restart
+	elif [[ "${modify}" == "5" ]]; then
+		Read_config
 		Set_port
 		Set_password
 		Set_cipher
+		Set_tfo
 		Write_config
 		Restart
 	else
-		echo -e "${Error} 请输入正确的数字(1-4)" && exit 1
+		echo -e "${Error} 请输入正确的数字(1-5)" && exit 1
 	fi
 }
 
@@ -419,7 +441,7 @@ View(){
 	echo -e " 端口\t: ${Green_font_prefix}${port}${Font_color_suffix}"
 	echo -e " 密码\t: ${Green_font_prefix}${password}${Font_color_suffix}"
 	echo -e " 加密\t: ${Green_font_prefix}${cipher}${Font_color_suffix}"
-	echo -e "——————————————————————————————————"
+	echo -e " TFO\t: ${Green_font_prefix}${tfo}${Font_color_suffix}"
 	[[ ! -z "${link_ipv4}" ]] && echo -e "${link_ipv4}"
 	[[ ! -z "${link_ipv6}" ]] && echo -e "${link_ipv6}"
 	echo -e "——————————————————————————————————"
