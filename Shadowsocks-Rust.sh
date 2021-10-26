@@ -5,7 +5,7 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust
-#	Version: 1.0.0
+#	Version: 1.0.1
 #	Author: 佩佩
 #	WebSite: http://nan.ge
 #=================================================
@@ -384,11 +384,32 @@ getipv6(){
 	fi
 }
 
+urlsafe_base64(){
+	date=$(echo -n "$1"|base64|sed ':a;N;s/\n/ /g;ta'|sed 's/ //g;s/=//g;s/+/-/g;s/\//_/g')
+	echo -e "${date}"
+}
+
+Link_QR(){
+	if [[ "${ipv4}" != "IPv4_Error" ]]; then
+		SSbase64=$(urlsafe_base64 "${cipher}:${password}@${ipv4}:${port}")
+		SSurl="ss://${SSbase64}"
+		SSQRcode="https://cli.im/api/qrcode/code?text=${SSurl}"
+		link_ipv4=" 链接  [IPv4] : ${Red_font_prefix}${SSurl}${Font_color_suffix} \n 二维码[IPv4] : ${Red_font_prefix}${SSQRcode}${Font_color_suffix}"
+	fi
+	if [[ "${ipv6}" != "IPv6_Error" ]]; then
+		SSbase64=$(urlsafe_base64 "${cipher}:${password}@${ipv6}:${port}")
+		SSurl="ss://${SSbase64}"
+		SSQRcode="https://cli.im/api/qrcode/code?text=${SSurl}"
+		link_ipv6=" 链接  [IPv6] : ${Red_font_prefix}${SSurl}${Font_color_suffix} \n 二维码[IPv6] : ${Red_font_prefix}${SSQRcode}${Font_color_suffix}"
+	fi
+}
+
 View(){
 	check_installed_status
 	Read_config
 	getipv4
 	getipv6
+	Link_QR
 	clear && echo
 	echo -e "Shadowsocks 配置："
 	echo -e "——————————————————————————————————"
@@ -397,6 +418,8 @@ View(){
 	echo -e " 端口\t: ${Green_font_prefix}${port}${Font_color_suffix}"
 	echo -e " 密码\t: ${Green_font_prefix}${password}${Font_color_suffix}"
 	echo -e " 加密\t: ${Green_font_prefix}${cipher}${Font_color_suffix}"
+	[[ ! -z "${link_ipv4}" ]] && echo -e "${link_ipv4}"
+	[[ ! -z "${link_ipv6}" ]] && echo -e "${link_ipv6}"
 	echo -e "——————————————————————————————————"
 	Before_Start_Menu
 }
