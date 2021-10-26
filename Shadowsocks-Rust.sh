@@ -5,12 +5,12 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust
-#	Version: 1.0.2
+#	Version: 1.0.3
 #	Author: 佩佩
 #	WebSite: http://nan.ge
 #=================================================
 
-sh_ver="1.0.2"
+sh_ver="1.0.3"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -59,11 +59,11 @@ sysArch() {
 }
 
 check_installed_status(){
-	[[ ! -e ${FILE} ]] && echo -e "${Error} Shadowsocks 没有安装，请检查 !" && exit 1
+	[[ ! -e ${FILE} ]] && echo -e "${Error} Shadowsocks 没有安装，请检查！" && exit 1
 }
 
 check_pid(){
-	PID=$(ps -ef| grep "shadowsocks-rust "| grep -v "grep" | grep -v "init.d" |grep -v "service" |awk '{print $2}')
+	PID=$(ps -ef| grep "shadowsocks-rust "| grep -v "grep" | grep -v "service" |awk '{print $2}')
 }
 
 check_new_ver(){
@@ -76,7 +76,7 @@ check_ver_comparison(){
 	now_ver=$(cat ${Now_ver_File})
 	if [[ "${now_ver}" != "${new_ver}" ]]; then
 		echo -e "${Info} 发现 Shadowsocks 已有新版本 [ ${new_ver} ]，旧版本 [ ${now_ver} ]"
-		read -e -p "是否更新 ? [Y/n] :" yn
+		read -e -p "是否更新 ？ [Y/n]：" yn
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ $yn == [Yy] ]]; then
 			check_pid
@@ -88,7 +88,7 @@ check_ver_comparison(){
 			Start
 		fi
 	else
-		echo -e "${Info} 当前 Shadowsocks 已是最新版本 [ ${new_ver} ]" && exit 1
+		echo -e "${Info} 当前 Shadowsocks 已是最新版本 [ ${new_ver} ] ！" && exit 1
 	fi
 }
 
@@ -102,7 +102,7 @@ Download(){
 	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
 	[[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]] && echo -e "${Error} Shadowsocks-Rust 下载失败！" && exit 1
 	tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks-Rust 压缩包解压失败 !" && rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" && exit 1
+	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks-Rust 压缩包解压失败！" && rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" && exit 1
 	rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
 	chmod +x ssserver
 	mv ssserver "${FILE}"
@@ -127,7 +127,7 @@ ExecStart=/usr/local/bin/shadowsocks-rust -c /etc/shadowsocks-rust/config.json
 [Install]
 WantedBy=multi-user.target' > /etc/systemd/system/shadowsocks-rust.service
 systemctl enable --now shadowsocks-rust
-	echo -e "${Info} Shadowsocks 服务配置完成 !"
+	echo -e "${Info} Shadowsocks 服务配置完成！"
 }
 
 Installation_dependency(){
@@ -153,7 +153,7 @@ EOF
 }
 
 Read_config(){
-	[[ ! -e ${CONF} ]] && echo -e "${Error} Shadowsocks 配置文件不存在 !" && exit 1
+	[[ ! -e ${CONF} ]] && echo -e "${Error} Shadowsocks 配置文件不存在！" && exit 1
 	port=$(cat ${CONF}|jq -r '.server_port')
 	password=$(cat ${CONF}|jq -r '.password')
 	cipher=$(cat ${CONF}|jq -r '.method')
@@ -164,13 +164,13 @@ Set_port(){
 	while true
 		do
 		echo -e "请输入 Shadowsocks 端口 [1-65535]"
-		read -e -p "(默认: 2525):" port
+		read -e -p "(默认：2525)：" port
 		[[ -z "${port}" ]] && port="2525"
 		echo $((${port}+0)) &>/dev/null
 		if [[ $? -eq 0 ]]; then
 			if [[ ${port} -ge 1 ]] && [[ ${port} -le 65535 ]]; then
 				echo && echo "=================================="
-				echo -e "	端口 : ${Red_background_prefix} ${port} ${Font_color_suffix}"
+				echo -e "	端口：${Red_background_prefix} ${port} ${Font_color_suffix}"
 				echo "==================================" && echo
 				break
 			else
@@ -183,20 +183,20 @@ Set_port(){
 }
 
 Set_tfo(){
-	echo "是否开启 TCP Fast Open（true 或 false）?"
-	read -e -p "(默认: true):" tfo
+	echo "是否开启 TCP Fast Open（true 或 false）？"
+	read -e -p "(默认：true)：" tfo
 	[[ -z "${tfo}" ]] && tfo=true
 	echo && echo "========================"
-	echo -e "	TCP Fast Open 开启状态 : ${Red_background_prefix} ${tfo} ${Font_color_suffix}"
+	echo -e "	TCP Fast Open 开启状态：${Red_background_prefix} ${tfo} ${Font_color_suffix}"
 	echo "========================" && echo
 }
 
 Set_password(){
 	echo "请输入 Shadowsocks 密码 [0-9][a-z][A-Z]"
-	read -e -p "(默认: 随机生成):" password
+	read -e -p "(默认：随机生成)：" password
 	[[ -z "${password}" ]] && password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)
 	echo && echo "=================================="
-	echo -e "	密码 : ${Red_background_prefix} ${password} ${Font_color_suffix}"
+	echo -e "	密码：${Red_background_prefix} ${password} ${Font_color_suffix}"
 	echo "==================================" && echo
 }
 
@@ -216,8 +216,8 @@ Set_cipher(){
  ${Green_font_prefix}11.${Font_color_suffix} rc4-md5
  ${Green_font_prefix}12.${Font_color_suffix} chacha20-ietf
 ==================================
- ${Tip} chacha20 系列加密方式无需额外安装 libsodium !" && echo
-	read -e -p "(默认: 1. chacha20-ietf-poly1305):" cipher
+ ${Tip} chacha20 系列加密方式无需额外安装 libsodium ！" && echo
+	read -e -p "(默认: 1. chacha20-ietf-poly1305)：" cipher
 	[[ -z "${cipher}" ]] && cipher="1"
 	if [[ ${cipher} == "1" ]]; then
 		cipher="chacha20-ietf-poly1305"
@@ -247,7 +247,7 @@ Set_cipher(){
 		cipher="chacha20-ietf-poly1305"
 	fi
 	echo && echo "=================================="
-	echo -e "	加密 : ${Red_background_prefix} ${cipher} ${Font_color_suffix}"
+	echo -e "	加密：${Red_background_prefix} ${cipher} ${Font_color_suffix}"
 	echo "==================================" && echo
 }
 
@@ -261,7 +261,7 @@ Set(){
  ${Green_font_prefix}4.${Font_color_suffix}  修改 TFO 配置
 ——————————————————————————————————
  ${Green_font_prefix}5.${Font_color_suffix}  修改 全部配置" && echo
-	read -e -p "(默认: 取消):" modify
+	read -e -p "(默认：取消)：" modify
 	[[ -z "${modify}" ]] && echo "已取消..." && exit 1
 	if [[ "${modify}" == "1" ]]; then
 		Read_config
@@ -309,7 +309,7 @@ Set(){
 }
 
 Install(){
-	[[ -e ${FILE} ]] && echo -e "${Error} 检测到 Shadowsocks 已安装 !" && exit 1
+	[[ -e ${FILE} ]] && echo -e "${Error} 检测到 Shadowsocks 已安装！" && exit 1
 	echo -e "${Info} 开始设置 配置..."
 	Set_port
 	Set_password
@@ -330,10 +330,10 @@ Install(){
 Start(){
 	check_installed_status
 	check_pid
-	[[ ! -z ${PID} ]] && echo -e "${Info} Shadowsocks 已在运行 !" && exit 1
+	[[ ! -z ${PID} ]] && echo -e "${Info} Shadowsocks 已在运行 ！" && exit 1
 	systemctl start shadowsocks-rust
 	check_pid
-	[[ ! -z ${PID} ]] && echo -e "${Info} Shadowsocks 启动成功 !"
+	[[ ! -z ${PID} ]] && echo -e "${Info} Shadowsocks 启动成功 ！"
     sleep 3s
     Start_Menu
 }
@@ -341,7 +341,7 @@ Start(){
 Stop(){
 	check_installed_status
 	check_pid
-	[[ -z ${PID} ]] && echo -e "${Error} Shadowsocks 没有运行，请检查 !" && exit 1
+	[[ -z ${PID} ]] && echo -e "${Error} Shadowsocks 没有运行，请检查！" && exit 1
 	systemctl stop shadowsocks-rust
     sleep 3s
     Start_Menu
@@ -354,7 +354,7 @@ Restart(){
 	systemctl restart shadowsocks-rust
 	check_pid
 	[[ ! -z ${PID} ]]
-	echo -e "${Info} Shadowsocks 重启完毕!"
+	echo -e "${Info} Shadowsocks 重启完毕！"
 	sleep 3s
 	View
     Start_Menu
@@ -364,7 +364,7 @@ Update(){
 	check_installed_status
 	check_new_ver
 	check_ver_comparison
-	echo -e "${Info} Shadowsocks 更新完毕 !"
+	echo -e "${Info} Shadowsocks 更新完毕！"
     sleep 3s
     Start_Menu
 }
@@ -373,14 +373,14 @@ Uninstall(){
 	check_installed_status
 	echo "确定要卸载 Shadowsocks ? (y/N)"
 	echo
-	read -e -p "(默认: n):" unyn
+	read -e -p "(默认：n)：" unyn
 	[[ -z ${unyn} ]] && unyn="n"
 	if [[ ${unyn} == [Yy] ]]; then
 		check_pid
 		[[ ! -z $PID ]] && kill -9 ${PID}
         systemctl disable shadowsocks-rust
 		rm -rf "${FILE}"
-		echo && echo "Shadowsocks 卸载完成 !" && echo
+		echo && echo "Shadowsocks 卸载完成！" && echo
 	else
 		echo && echo "卸载已取消..." && echo
 	fi
@@ -417,13 +417,13 @@ Link_QR(){
 		SSbase64=$(urlsafe_base64 "${cipher}:${password}@${ipv4}:${port}")
 		SSurl="ss://${SSbase64}"
 		SSQRcode="https://cli.im/api/qrcode/code?text=${SSurl}"
-		link_ipv4=" 链接  [IPv4] : ${Red_font_prefix}${SSurl}${Font_color_suffix} \n 二维码[IPv4] : ${Red_font_prefix}${SSQRcode}${Font_color_suffix}"
+		link_ipv4=" 链接  [IPv4]：${Red_font_prefix}${SSurl}${Font_color_suffix} \n 二维码[IPv4]：${Red_font_prefix}${SSQRcode}${Font_color_suffix}"
 	fi
 	if [[ "${ipv6}" != "IPv6_Error" ]]; then
 		SSbase64=$(urlsafe_base64 "${cipher}:${password}@${ipv6}:${port}")
 		SSurl="ss://${SSbase64}"
 		SSQRcode="https://cli.im/api/qrcode/code?text=${SSurl}"
-		link_ipv6=" 链接  [IPv6] : ${Red_font_prefix}${SSurl}${Font_color_suffix} \n 二维码[IPv6] : ${Red_font_prefix}${SSQRcode}${Font_color_suffix}"
+		link_ipv6=" 链接  [IPv6]：${Red_font_prefix}${SSurl}${Font_color_suffix} \n 二维码[IPv6]：${Red_font_prefix}${SSQRcode}${Font_color_suffix}"
 	fi
 }
 
@@ -442,6 +442,7 @@ View(){
 	echo -e " 密码\t: ${Green_font_prefix}${password}${Font_color_suffix}"
 	echo -e " 加密\t: ${Green_font_prefix}${cipher}${Font_color_suffix}"
 	echo -e " TFO\t: ${Green_font_prefix}${tfo}${Font_color_suffix}"
+	echo -e "——————————————————————————————————"
 	[[ ! -z "${link_ipv4}" ]] && echo -e "${link_ipv4}"
 	[[ ! -z "${link_ipv6}" ]] && echo -e "${link_ipv6}"
 	echo -e "——————————————————————————————————"
@@ -461,11 +462,11 @@ Update_Shell(){
 	[[ -z ${sh_new_ver} ]] && echo -e "${Error} 检测最新版本失败 !" && Start_Menu
 	if [[ ${sh_new_ver} != ${sh_ver} ]]; then
 		echo -e "发现新版本[ ${sh_new_ver} ]，是否更新？[Y/n]"
-		read -p "(默认: y):" yn
+		read -p "(默认：y)：" yn
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ ${yn} == [Yy] ]]; then
 			wget -O Shadowsocks-Rust.sh --no-check-certificate https://raw.githubusercontent.com/xOS/Shadowsocks-Rust/master/Shadowsocks-Rust.sh && chmod +x Shadowsocks-Rust.sh
-			echo -e "脚本已更新为最新版本[ ${sh_new_ver} ] !"
+			echo -e "脚本已更新为最新版本[ ${sh_new_ver} ]！"
 			echo -e "3s后执行新脚本"
             sleep 3s
             bash Shadowsocks-Rust.sh
@@ -475,7 +476,7 @@ Update_Shell(){
             Start_Menu
 		fi
 	else
-		echo -e "当前已是最新版本[ ${sh_new_ver} ] !"
+		echo -e "当前已是最新版本[ ${sh_new_ver} ] ！"
 		sleep 3s
         Start_Menu
 	fi
@@ -521,15 +522,15 @@ Shadowsocks-Rust 管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
 	if [[ -e ${FILE} ]]; then
 		check_pid
 		if [[ ! -z "${PID}" ]]; then
-			echo -e " 当前状态: ${Green_font_prefix}已安装${Font_color_suffix} 并 ${Green_font_prefix}已启动${Font_color_suffix}"
+			echo -e " 当前状态：${Green_font_prefix}已安装${Font_color_suffix} 并 ${Green_font_prefix}已启动${Font_color_suffix}"
 		else
-			echo -e " 当前状态: ${Green_font_prefix}已安装${Font_color_suffix} 但 ${Red_font_prefix}未启动${Font_color_suffix}"
+			echo -e " 当前状态：${Green_font_prefix}已安装${Font_color_suffix} 但 ${Red_font_prefix}未启动${Font_color_suffix}"
 		fi
 	else
-		echo -e " 当前状态: ${Red_font_prefix}未安装${Font_color_suffix}"
+		echo -e " 当前状态：${Red_font_prefix}未安装${Font_color_suffix}"
 	fi
 	echo
-	read -e -p " 请输入数字 [0-10]:" num
+	read -e -p " 请输入数字 [0-10]：" num
 	case "$num" in
 		0)
 		Update_Shell
