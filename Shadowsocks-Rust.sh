@@ -146,7 +146,7 @@ Write_config(){
     "server_port": ${port},
     "password": "${password}",
     "method": "${cipher}",
-    "fast_open":true,
+    "fast_open": true,
     "mode": "tcp_and_udp"
 }
 EOF
