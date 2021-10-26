@@ -249,7 +249,8 @@ Set(){
  ${Green_font_prefix}2.${Font_color_suffix}  修改 密码配置
  ${Green_font_prefix}3.${Font_color_suffix}  修改 加密配置
 ——————————————————————————————————
- ${Green_font_prefix}4.${Font_color_suffix}  修改 全部配置" && echo
+ ${Green_font_prefix}4.${Font_color_suffix}  修改 全部配置
+——————————————————————————————————" && echo
 	read -e -p "(默认: 取消):" modify
 	[[ -z "${modify}" ]] && echo "已取消..." && exit 1
 	if [[ "${modify}" == "1" ]]; then
@@ -418,6 +419,7 @@ View(){
 	echo -e " 端口\t: ${Green_font_prefix}${port}${Font_color_suffix}"
 	echo -e " 密码\t: ${Green_font_prefix}${password}${Font_color_suffix}"
 	echo -e " 加密\t: ${Green_font_prefix}${cipher}${Font_color_suffix}"
+	echo -e "——————————————————————————————————"
 	[[ ! -z "${link_ipv4}" ]] && echo -e "${link_ipv4}"
 	[[ ! -z "${link_ipv6}" ]] && echo -e "${link_ipv6}"
 	echo -e "——————————————————————————————————"
