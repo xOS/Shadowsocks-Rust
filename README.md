@@ -3,5 +3,5 @@
 ## 使用
 国外
 ```bash
-wget -N --no-check-certificate https://git.io/Shadowsocks-Rust.sh && chmod +x RealM.sh && ./RealM.sh
+wget -N --no-check-certificate https://git.io/Shadowsocks-Rust.sh && chmod +x Shadowsocks-Rust.sh && ./Shadowsocks-Rust.sh
 ```
