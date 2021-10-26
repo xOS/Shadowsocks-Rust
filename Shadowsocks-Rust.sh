@@ -397,7 +397,7 @@ View(){
 	echo -e " 端口\t: ${Green_font_prefix}${port}${Font_color_suffix}"
 	echo -e " 密码\t: ${Green_font_prefix}${password}${Font_color_suffix}"
 	echo -e " 加密\t: ${Green_font_prefix}${cipher}${Font_color_suffix}"
-	echo
+	echo -e "——————————————————————————————————"
 	Before_Start_Menu
 }
 
