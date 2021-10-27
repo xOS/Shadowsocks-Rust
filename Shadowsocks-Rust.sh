@@ -5,12 +5,12 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust
-#	Version: 1.0.3
+#	Version: 1.0.4
 #	Author: 佩佩
 #	WebSite: http://nan.ge
 #=================================================
 
-sh_ver="1.0.3"
+sh_ver="1.0.4"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -170,7 +170,7 @@ Set_port(){
 		if [[ $? -eq 0 ]]; then
 			if [[ ${port} -ge 1 ]] && [[ ${port} -le 65535 ]]; then
 				echo && echo "=================================="
-				echo -e "	端口：${Red_background_prefix} ${port} ${Font_color_suffix}"
+				echo -e "端口：${Red_background_prefix} ${port} ${Font_color_suffix}"
 				echo "==================================" && echo
 				break
 			else
@@ -183,12 +183,20 @@ Set_port(){
 }
 
 Set_tfo(){
-	echo "是否开启 TCP Fast Open（true 或 false）？"
-	read -e -p "(默认：true)：" tfo
-	[[ -z "${tfo}" ]] && tfo=true
-	echo && echo "========================"
-	echo -e "	TCP Fast Open 开启状态：${Red_background_prefix} ${tfo} ${Font_color_suffix}"
-	echo "========================" && echo
+	echo -e "是否开启 TCP Fast Open ？
+==================================
+${Green_font_prefix} 1.${Font_color_suffix} 开启  ${Green_font_prefix} 2.${Font_color_suffix} 关闭
+=================================="
+	read -e -p "(默认：1.开启)：" tfo
+	[[ -z "${tfo}" ]] && tfo="1"
+	if [[ ${tfo} == "1" ]]; then
+		tfo=true
+	else
+		tfo=false
+	fi
+	echo && echo "=================================="
+	echo -e "TCP Fast Open 开启状态：${Red_background_prefix} ${tfo} ${Font_color_suffix}"
+	echo "==================================" && echo
 }
 
 Set_password(){
@@ -196,7 +204,7 @@ Set_password(){
 	read -e -p "(默认：随机生成)：" password
 	[[ -z "${password}" ]] && password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)
 	echo && echo "=================================="
-	echo -e "	密码：${Red_background_prefix} ${password} ${Font_color_suffix}"
+	echo -e "密码：${Red_background_prefix} ${password} ${Font_color_suffix}"
 	echo "==================================" && echo
 }
 
@@ -247,19 +255,19 @@ Set_cipher(){
 		cipher="chacha20-ietf-poly1305"
 	fi
 	echo && echo "=================================="
-	echo -e "	加密：${Red_background_prefix} ${cipher} ${Font_color_suffix}"
+	echo -e "加密：${Red_background_prefix} ${cipher} ${Font_color_suffix}"
 	echo "==================================" && echo
 }
 
 Set(){
 	check_installed_status
 	echo && echo -e "你要做什么？
-——————————————————————————————————
+==================================
  ${Green_font_prefix}1.${Font_color_suffix}  修改 端口配置
  ${Green_font_prefix}2.${Font_color_suffix}  修改 密码配置
  ${Green_font_prefix}3.${Font_color_suffix}  修改 加密配置
  ${Green_font_prefix}4.${Font_color_suffix}  修改 TFO 配置
-——————————————————————————————————
+==================================
  ${Green_font_prefix}5.${Font_color_suffix}  修改 全部配置" && echo
 	read -e -p "(默认：取消)：" modify
 	[[ -z "${modify}" ]] && echo "已取消..." && exit 1
