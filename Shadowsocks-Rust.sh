@@ -5,12 +5,12 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust
-#	Version: 1.0.4
+#	Version: 1.0.5
 #	Author: 佩佩
 #	WebSite: http://nan.ge
 #=================================================
 
-sh_ver="1.0.4"
+sh_ver="1.0.5"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -147,7 +147,10 @@ Write_config(){
     "password": "${password}",
     "method": "${cipher}",
     "fast_open": ${tfo},
-    "mode": "tcp_and_udp"
+    "mode": "tcp_and_udp",
+    "user":"nobody",
+    "timeout":300,
+    "nameserver":"8.8.8.8"
 }
 EOF
 }
@@ -225,7 +228,7 @@ Set_cipher(){
  ${Green_font_prefix}11.${Font_color_suffix} rc4-md5
  ${Green_font_prefix}12.${Font_color_suffix} chacha20-ietf
 ==================================
- ${Tip} chacha20 系列加密方式无需额外安装 libsodium ！" && echo
+ ${Tip} 如需其它加密方式请手动修改配置文件 !" && echo
 	read -e -p "(默认: 1. chacha20-ietf-poly1305)：" cipher
 	[[ -z "${cipher}" ]] && cipher="1"
 	if [[ ${cipher} == "1" ]]; then
@@ -389,6 +392,7 @@ Uninstall(){
 		check_pid
 		[[ ! -z $PID ]] && kill -9 ${PID}
         systemctl disable shadowsocks-rust
+	rm -fr /etc/shadowsocks-rust
 		rm -rf "${FILE}"
 		echo && echo "Shadowsocks 卸载完成！" && echo
 	else
