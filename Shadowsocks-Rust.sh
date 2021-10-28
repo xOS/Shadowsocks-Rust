@@ -163,6 +163,7 @@ Read_config(){
 Set_port(){
 	while true
 		do
+		echo -e "${Tip} 本步骤不涉及系统防火墙端口操作，请手动放行相应端口！"
 		echo -e "请输入 Shadowsocks 端口 [1-65535]"
 		read -e -p "(默认：2525)：" port
 		[[ -z "${port}" ]] && port="2525"
@@ -322,6 +323,7 @@ Install(){
 	Set_port
 	Set_password
 	Set_cipher
+	Set_tfo
 	echo -e "${Info} 开始安装/配置 依赖..."
 	Installation_dependency
 	echo -e "${Info} 开始下载/安装..."
