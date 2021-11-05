@@ -63,7 +63,7 @@ check_installed_status(){
 }
 
 check_pid(){
-	PID=$(ps -ef| grep "shadowsocks-rust "| grep -v "grep" | grep -v "service" |awk '{print $2}')
+	PID=$(ps -ef| grep "shadowsocks-rust "|awk '{print $2}')
 }
 
 check_new_ver(){
