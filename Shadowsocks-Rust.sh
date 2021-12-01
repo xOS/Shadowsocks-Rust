@@ -5,12 +5,12 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust
-#	Version: 1.0.5
+#	Version: 1.0.6
 #	Author: 佩佩
 #	WebSite: http://nan.ge
 #=================================================
 
-sh_ver="1.0.5"
+sh_ver="1.0.6"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -102,10 +102,11 @@ Download(){
 	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
 	[[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]] && echo -e "${Error} Shadowsocks-Rust 下载失败！" && exit 1
 	tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks-Rust 压缩包解压失败！" && rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" && exit 1
+	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks-Rust 压缩包解压失败！" && exit 1
 	rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
 	chmod +x ssserver
 	mv ssserver "${FILE}"
+	rm sslocal ssmanager ssservice ssurl
 	echo "${new_ver}" > ${Now_ver_File}
     echo -e "${Info} Shadowsocks-Rust 主程序下载安装完毕！"
 }
@@ -132,9 +133,9 @@ systemctl enable --now shadowsocks-rust
 
 Installation_dependency(){
 	if [[ ${release} == "centos" ]]; then
-		yum update && yum install jq gzip wget curl unzip -y
+		yum update && yum install jq gzip wget curl unzip xz -y
 	else
-		apt-get update && apt-get install jq gzip wget curl unzip -y
+		apt-get update && apt-get install jq gzip wget curl unzip xz-utils -y
 	fi
 	\cp -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 }
