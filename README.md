@@ -3,5 +3,5 @@
 ## 使用
 
 ```bash
-wget -N --no-check-certificate https://git.io/Shadowsocks-Rust.sh && chmod +x Shadowsocks-Rust.sh && ./Shadowsocks-Rust.sh
+wget -NO shadowsocks-rust.sh --no-check-certificate https://git.io/Shadowsocks-Rust.sh && chmod +x shadowsocks-rust.sh && ./shadowsocks-rust.sh
 ```
