@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.0.7"
+sh_ver="1.0.8"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -362,12 +362,8 @@ Stop(){
 
 Restart(){
 	check_installed_status
-	check_status
-	[[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
 	systemctl restart shadowsocks-rust
-	check_status
-	[[ "$status" == "running" ]]
-	echo -e "${Info} Shadowsocks-Rust 重启完毕！"
+	echo -e "${Info} Shadowsocks-Rust 重启完毕 ！"
 	sleep 3s
 	View
     Start_Menu
