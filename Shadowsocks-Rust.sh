@@ -5,12 +5,11 @@ export PATH
 #=================================================
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust
-#	Version: 1.0.6
 #	Author: 佩佩
-#	WebSite: http://nan.ge
+#	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.0.6"
+sh_ver="1.0.7"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -59,28 +58,28 @@ sysArch() {
 }
 
 check_installed_status(){
-	[[ ! -e ${FILE} ]] && echo -e "${Error} Shadowsocks 没有安装，请检查！" && exit 1
+	[[ ! -e ${FILE} ]] && echo -e "${Error} Shadowsocks-Rust 没有安装，请检查！" && exit 1
 }
 
-check_pid(){
-	PID=$(ps -ef| grep "shadowsocks-rust "|awk '{print $2}')
+check_status(){
+	status=`systemctl status shadowsocks-rust | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1`
 }
 
 check_new_ver(){
-	new_ver=$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-rust/releases| grep "tag_name"| head -n 1| awk -F ":" '{print $2}'| sed 's/\"//g;s/,//g;s/ //g')
-	[[ -z ${new_ver} ]] && echo -e "${Error} Shadowsocks 最新版本获取失败！" && exit 1
-	echo -e "${Info} 检测到 Shadowsocks 最新版本为 [ ${new_ver} ]"
+	new_ver=$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-rust/releases| jq -r '[.[] | select(.prerelease == false) | select(.draft == false) | .tag_name] | .[0]')
+	[[ -z ${new_ver} ]] && echo -e "${Error} Shadowsocks-Rust 最新版本获取失败！" && exit 1
+	echo -e "${Info} 检测到 Shadowsocks-Rust 最新版本为 [ ${new_ver} ]"
 }
 
 check_ver_comparison(){
 	now_ver=$(cat ${Now_ver_File})
 	if [[ "${now_ver}" != "${new_ver}" ]]; then
-		echo -e "${Info} 发现 Shadowsocks 已有新版本 [ ${new_ver} ]，旧版本 [ ${now_ver} ]"
+		echo -e "${Info} 发现 Shadowsocks-Rust 已有新版本 [ ${new_ver} ]，旧版本 [ ${now_ver} ]"
 		read -e -p "是否更新 ？ [Y/n]：" yn
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ $yn == [Yy] ]]; then
-			check_pid
-			[[ ! -z $PID ]] && kill -9 ${PID}
+			check_status
+			[[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
 			\cp "${CONF}" "/tmp/config.json"
 			rm -rf ${FOLDER}
 			Download
@@ -88,7 +87,7 @@ check_ver_comparison(){
 			Start
 		fi
 	else
-		echo -e "${Info} 当前 Shadowsocks 已是最新版本 [ ${new_ver} ] ！" && exit 1
+		echo -e "${Info} 当前 Shadowsocks-Rust 已是最新版本 [ ${new_ver} ] ！" && exit 1
 	fi
 }
 
@@ -114,7 +113,7 @@ Download(){
 Service(){
 	echo '
 [Unit]
-Description= Shadowsocks Service
+Description= Shadowsocks Rust Service
 After=network-online.target
 Wants=network-online.target systemd-networkd-wait-online.service
 [Service]
@@ -128,7 +127,7 @@ ExecStart=/usr/local/bin/shadowsocks-rust -c /etc/shadowsocks-rust/config.json
 [Install]
 WantedBy=multi-user.target' > /etc/systemd/system/shadowsocks-rust.service
 systemctl enable --now shadowsocks-rust
-	echo -e "${Info} Shadowsocks 服务配置完成！"
+	echo -e "${Info} Shadowsocks-Rust 服务配置完成！"
 }
 
 Installation_dependency(){
@@ -157,7 +156,7 @@ EOF
 }
 
 Read_config(){
-	[[ ! -e ${CONF} ]] && echo -e "${Error} Shadowsocks 配置文件不存在！" && exit 1
+	[[ ! -e ${CONF} ]] && echo -e "${Error} Shadowsocks-Rust 配置文件不存在！" && exit 1
 	port=$(cat ${CONF}|jq -r '.server_port')
 	password=$(cat ${CONF}|jq -r '.password')
 	cipher=$(cat ${CONF}|jq -r '.method')
@@ -168,7 +167,7 @@ Set_port(){
 	while true
 		do
 		echo -e "${Tip} 本步骤不涉及系统防火墙端口操作，请手动放行相应端口！"
-		echo -e "请输入 Shadowsocks 端口 [1-65535]"
+		echo -e "请输入 Shadowsocks-Rust 端口 [1-65535]"
 		read -e -p "(默认：2525)：" port
 		[[ -z "${port}" ]] && port="2525"
 		echo $((${port}+0)) &>/dev/null
@@ -205,7 +204,7 @@ ${Green_font_prefix} 1.${Font_color_suffix} 开启  ${Green_font_prefix} 2.${Fon
 }
 
 Set_password(){
-	echo "请输入 Shadowsocks 密码 [0-9][a-z][A-Z]"
+	echo "请输入 Shadowsocks-Rust 密码 [0-9][a-z][A-Z]"
 	read -e -p "(默认：随机生成)：" password
 	[[ -z "${password}" ]] && password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)
 	echo && echo "=================================="
@@ -214,7 +213,7 @@ Set_password(){
 }
 
 Set_cipher(){
-	echo -e "请选择 Shadowsocks 加密方式
+	echo -e "请选择 Shadowsocks-Rust 加密方式
 ==================================	
  ${Green_font_prefix} 1.${Font_color_suffix} chacha20-ietf-poly1305 ${Green_font_prefix}(推荐)${Font_color_suffix}
  ${Green_font_prefix} 2.${Font_color_suffix} aes-128-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
@@ -322,7 +321,7 @@ Set(){
 }
 
 Install(){
-	[[ -e ${FILE} ]] && echo -e "${Error} 检测到 Shadowsocks 已安装！" && exit 1
+	[[ -e ${FILE} ]] && echo -e "${Error} 检测到 Shadowsocks-Rust 已安装！" && exit 1
 	echo -e "${Info} 开始设置 配置..."
 	Set_port
 	Set_password
@@ -343,19 +342,19 @@ Install(){
 
 Start(){
 	check_installed_status
-	check_pid
-	[[ ! -z ${PID} ]] && echo -e "${Info} Shadowsocks 已在运行 ！" && exit 1
+	check_status
+	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks-Rust 已在运行 ！" && exit 1
 	systemctl start shadowsocks-rust
-	check_pid
-	[[ ! -z ${PID} ]] && echo -e "${Info} Shadowsocks 启动成功 ！"
+	check_status
+	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks-Rust 启动成功 ！"
     sleep 3s
     Start_Menu
 }
 
 Stop(){
 	check_installed_status
-	check_pid
-	[[ -z ${PID} ]] && echo -e "${Error} Shadowsocks 没有运行，请检查！" && exit 1
+	check_status
+	[[ !"$status" == "running" ]] && echo -e "${Error} Shadowsocks-Rust 没有运行，请检查！" && exit 1
 	systemctl stop shadowsocks-rust
     sleep 3s
     Start_Menu
@@ -363,12 +362,12 @@ Stop(){
 
 Restart(){
 	check_installed_status
-	check_pid
-	[[ ! -z ${PID} ]] && systemctl stop shadowsocks-rust
+	check_status
+	[[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
 	systemctl restart shadowsocks-rust
-	check_pid
-	[[ ! -z ${PID} ]]
-	echo -e "${Info} Shadowsocks 重启完毕！"
+	check_status
+	[[ "$status" == "running" ]]
+	echo -e "${Info} Shadowsocks-Rust 重启完毕！"
 	sleep 3s
 	View
     Start_Menu
@@ -378,24 +377,24 @@ Update(){
 	check_installed_status
 	check_new_ver
 	check_ver_comparison
-	echo -e "${Info} Shadowsocks 更新完毕！"
+	echo -e "${Info} Shadowsocks-Rust 更新完毕！"
     sleep 3s
     Start_Menu
 }
 
 Uninstall(){
 	check_installed_status
-	echo "确定要卸载 Shadowsocks ? (y/N)"
+	echo "确定要卸载 Shadowsocks-Rust ? (y/N)"
 	echo
 	read -e -p "(默认：n)：" unyn
 	[[ -z ${unyn} ]] && unyn="n"
 	if [[ ${unyn} == [Yy] ]]; then
-		check_pid
-		[[ ! -z $PID ]] && kill -9 ${PID}
+		check_status
+		[[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
         systemctl disable shadowsocks-rust
-	rm -fr /etc/shadowsocks-rust
+		rm -rf "${FOLDER}"
 		rm -rf "${FILE}"
-		echo && echo "Shadowsocks 卸载完成！" && echo
+		echo && echo "Shadowsocks-Rust 卸载完成！" && echo
 	else
 		echo && echo "卸载已取消..." && echo
 	fi
@@ -449,7 +448,7 @@ View(){
 	getipv6
 	Link_QR
 	clear && echo
-	echo -e "Shadowsocks 配置："
+	echo -e "Shadowsocks-Rust 配置："
 	echo -e "——————————————————————————————————"
 	[[ "${ipv4}" != "IPv4_Error" ]] && echo -e " 地址：${Green_font_prefix}${ipv4}${Font_color_suffix}"
 	[[ "${ipv6}" != "IPv6_Error" ]] && echo -e " 地址：${Green_font_prefix}${ipv6}${Font_color_suffix}"
@@ -465,7 +464,7 @@ View(){
 }
 
 Status(){
-	echo -e "${Info} 获取 Shadowsocks 活动日志 ……"
+	echo -e "${Info} 获取 Shadowsocks-Rust 活动日志 ……"
 	echo -e "${Tip} 返回主菜单请按 q ！"
 	systemctl status shadowsocks-rust
 	Start_Menu
@@ -480,11 +479,11 @@ Update_Shell(){
 		read -p "(默认：y)：" yn
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ ${yn} == [Yy] ]]; then
-			wget -O Shadowsocks-Rust.sh --no-check-certificate https://raw.githubusercontent.com/xOS/Shadowsocks-Rust/master/Shadowsocks-Rust.sh && chmod +x Shadowsocks-Rust.sh
+			wget -NO shadowsocks-rust.sh --no-check-certificate https://git.io/Shadowsocks-Rust.sh && chmod +x shadowsocks-rust.sh && ./shadowsocks-rust.sh
 			echo -e "脚本已更新为最新版本[ ${sh_new_ver} ]！"
 			echo -e "3s后执行新脚本"
             sleep 3s
-            bash Shadowsocks-Rust.sh
+            bash shadowsocks-rust.sh
 		else
 			echo && echo "	已取消..." && echo
             sleep 3s
@@ -496,7 +495,7 @@ Update_Shell(){
         Start_Menu
 	fi
 	sleep 3s
-    	bash Shadowsocks-Rust.sh
+    	bash shadowsocks-rust.sh
 }
 
 Before_Start_Menu() {
@@ -535,8 +534,8 @@ Shadowsocks-Rust 管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
  ${Green_font_prefix} 10.${Font_color_suffix} 退出脚本
 ==================================" && echo
 	if [[ -e ${FILE} ]]; then
-		check_pid
-		if [[ ! -z "${PID}" ]]; then
+		check_status
+		if [[ "$status" == "running" ]]; then
 			echo -e " 当前状态：${Green_font_prefix}已安装${Font_color_suffix} 并 ${Green_font_prefix}已启动${Font_color_suffix}"
 		else
 			echo -e " 当前状态：${Green_font_prefix}已安装${Font_color_suffix} 但 ${Red_font_prefix}未启动${Font_color_suffix}"
