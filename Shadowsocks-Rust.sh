@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.0.8"
+sh_ver="1.0.9"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -58,7 +58,7 @@ sysArch() {
 }
 
 check_installed_status(){
-	[[ ! -e ${FILE} ]] && echo -e "${Error} Shadowsocks-Rust 没有安装，请检查！" && exit 1
+	[[ ! -e ${FILE} ]] && echo -e "${Error} Shadowsocks Rust 没有安装，请检查！" && exit 1
 }
 
 check_status(){
@@ -67,14 +67,14 @@ check_status(){
 
 check_new_ver(){
 	new_ver=$(wget -qO- https://api.github.com/repos/shadowsocks/shadowsocks-rust/releases| jq -r '[.[] | select(.prerelease == false) | select(.draft == false) | .tag_name] | .[0]')
-	[[ -z ${new_ver} ]] && echo -e "${Error} Shadowsocks-Rust 最新版本获取失败！" && exit 1
-	echo -e "${Info} 检测到 Shadowsocks-Rust 最新版本为 [ ${new_ver} ]"
+	[[ -z ${new_ver} ]] && echo -e "${Error} Shadowsocks Rust 最新版本获取失败！" && exit 1
+	echo -e "${Info} 检测到 Shadowsocks Rust 最新版本为 [ ${new_ver} ]"
 }
 
 check_ver_comparison(){
 	now_ver=$(cat ${Now_ver_File})
 	if [[ "${now_ver}" != "${new_ver}" ]]; then
-		echo -e "${Info} 发现 Shadowsocks-Rust 已有新版本 [ ${new_ver} ]，旧版本 [ ${now_ver} ]"
+		echo -e "${Info} 发现 Shadowsocks Rust 已有新版本 [ ${new_ver} ]，旧版本 [ ${now_ver} ]"
 		read -e -p "是否更新 ？ [Y/n]：" yn
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ $yn == [Yy] ]]; then
@@ -87,7 +87,7 @@ check_ver_comparison(){
 			Start
 		fi
 	else
-		echo -e "${Info} 当前 Shadowsocks-Rust 已是最新版本 [ ${new_ver} ] ！" && exit 1
+		echo -e "${Info} 当前 Shadowsocks Rust 已是最新版本 [ ${new_ver} ] ！" && exit 1
 	fi
 }
 
@@ -97,17 +97,17 @@ Download(){
 	else
 		[[ -e "${FILE}" ]] && rm -rf "${FILE}"
 	fi
-	echo -e "${Info} 开始下载 Shadowsocks-Rust ……"
+	echo -e "${Info} 开始下载 Shadowsocks Rust ……"
 	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	[[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]] && echo -e "${Error} Shadowsocks-Rust 下载失败！" && exit 1
+	[[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]] && echo -e "${Error} Shadowsocks Rust 下载失败！" && exit 1
 	tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks-Rust 压缩包解压失败！" && exit 1
+	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks Rust 压缩包解压失败！" && exit 1
 	rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
 	chmod +x ssserver
 	mv ssserver "${FILE}"
 	rm sslocal ssmanager ssservice ssurl
 	echo "${new_ver}" > ${Now_ver_File}
-    echo -e "${Info} Shadowsocks-Rust 主程序下载安装完毕！"
+    echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
 }
 
 Service(){
@@ -127,7 +127,7 @@ ExecStart=/usr/local/bin/shadowsocks-rust -c /etc/shadowsocks-rust/config.json
 [Install]
 WantedBy=multi-user.target' > /etc/systemd/system/shadowsocks-rust.service
 systemctl enable --now shadowsocks-rust
-	echo -e "${Info} Shadowsocks-Rust 服务配置完成！"
+	echo -e "${Info} Shadowsocks Rust 服务配置完成！"
 }
 
 Installation_dependency(){
@@ -156,7 +156,7 @@ EOF
 }
 
 Read_config(){
-	[[ ! -e ${CONF} ]] && echo -e "${Error} Shadowsocks-Rust 配置文件不存在！" && exit 1
+	[[ ! -e ${CONF} ]] && echo -e "${Error} Shadowsocks Rust 配置文件不存在！" && exit 1
 	port=$(cat ${CONF}|jq -r '.server_port')
 	password=$(cat ${CONF}|jq -r '.password')
 	cipher=$(cat ${CONF}|jq -r '.method')
@@ -167,7 +167,7 @@ Set_port(){
 	while true
 		do
 		echo -e "${Tip} 本步骤不涉及系统防火墙端口操作，请手动放行相应端口！"
-		echo -e "请输入 Shadowsocks-Rust 端口 [1-65535]"
+		echo -e "请输入 Shadowsocks Rust 端口 [1-65535]"
 		read -e -p "(默认：2525)：" port
 		[[ -z "${port}" ]] && port="2525"
 		echo $((${port}+0)) &>/dev/null
@@ -204,7 +204,7 @@ ${Green_font_prefix} 1.${Font_color_suffix} 开启  ${Green_font_prefix} 2.${Fon
 }
 
 Set_password(){
-	echo "请输入 Shadowsocks-Rust 密码 [0-9][a-z][A-Z]"
+	echo "请输入 Shadowsocks Rust 密码 [0-9][a-z][A-Z]"
 	read -e -p "(默认：随机生成)：" password
 	[[ -z "${password}" ]] && password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)
 	echo && echo "=================================="
@@ -213,7 +213,7 @@ Set_password(){
 }
 
 Set_cipher(){
-	echo -e "请选择 Shadowsocks-Rust 加密方式
+	echo -e "请选择 Shadowsocks Rust 加密方式
 ==================================	
  ${Green_font_prefix} 1.${Font_color_suffix} chacha20-ietf-poly1305 ${Green_font_prefix}(推荐)${Font_color_suffix}
  ${Green_font_prefix} 2.${Font_color_suffix} aes-128-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
@@ -321,7 +321,7 @@ Set(){
 }
 
 Install(){
-	[[ -e ${FILE} ]] && echo -e "${Error} 检测到 Shadowsocks-Rust 已安装！" && exit 1
+	[[ -e ${FILE} ]] && echo -e "${Error} 检测到 Shadowsocks Rust 已安装！" && exit 1
 	echo -e "${Info} 开始设置 配置..."
 	Set_port
 	Set_password
@@ -343,10 +343,10 @@ Install(){
 Start(){
 	check_installed_status
 	check_status
-	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks-Rust 已在运行 ！" && exit 1
+	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks Rust 已在运行 ！" && exit 1
 	systemctl start shadowsocks-rust
 	check_status
-	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks-Rust 启动成功 ！"
+	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks Rust 启动成功 ！"
     sleep 3s
     Start_Menu
 }
@@ -354,7 +354,7 @@ Start(){
 Stop(){
 	check_installed_status
 	check_status
-	[[ !"$status" == "running" ]] && echo -e "${Error} Shadowsocks-Rust 没有运行，请检查！" && exit 1
+	[[ !"$status" == "running" ]] && echo -e "${Error} Shadowsocks Rust 没有运行，请检查！" && exit 1
 	systemctl stop shadowsocks-rust
     sleep 3s
     Start_Menu
@@ -363,7 +363,7 @@ Stop(){
 Restart(){
 	check_installed_status
 	systemctl restart shadowsocks-rust
-	echo -e "${Info} Shadowsocks-Rust 重启完毕 ！"
+	echo -e "${Info} Shadowsocks Rust 重启完毕 ！"
 	sleep 3s
 	View
     Start_Menu
@@ -373,14 +373,14 @@ Update(){
 	check_installed_status
 	check_new_ver
 	check_ver_comparison
-	echo -e "${Info} Shadowsocks-Rust 更新完毕！"
+	echo -e "${Info} Shadowsocks Rust 更新完毕！"
     sleep 3s
     Start_Menu
 }
 
 Uninstall(){
 	check_installed_status
-	echo "确定要卸载 Shadowsocks-Rust ? (y/N)"
+	echo "确定要卸载 Shadowsocks Rust ? (y/N)"
 	echo
 	read -e -p "(默认：n)：" unyn
 	[[ -z ${unyn} ]] && unyn="n"
@@ -390,7 +390,7 @@ Uninstall(){
         systemctl disable shadowsocks-rust
 		rm -rf "${FOLDER}"
 		rm -rf "${FILE}"
-		echo && echo "Shadowsocks-Rust 卸载完成！" && echo
+		echo && echo "Shadowsocks Rust 卸载完成！" && echo
 	else
 		echo && echo "卸载已取消..." && echo
 	fi
@@ -444,7 +444,7 @@ View(){
 	getipv6
 	Link_QR
 	clear && echo
-	echo -e "Shadowsocks-Rust 配置："
+	echo -e "Shadowsocks Rust 配置："
 	echo -e "——————————————————————————————————"
 	[[ "${ipv4}" != "IPv4_Error" ]] && echo -e " 地址：${Green_font_prefix}${ipv4}${Font_color_suffix}"
 	[[ "${ipv6}" != "IPv6_Error" ]] && echo -e " 地址：${Green_font_prefix}${ipv6}${Font_color_suffix}"
@@ -460,7 +460,7 @@ View(){
 }
 
 Status(){
-	echo -e "${Info} 获取 Shadowsocks-Rust 活动日志 ……"
+	echo -e "${Info} 获取 Shadowsocks Rust 活动日志 ……"
 	echo -e "${Tip} 返回主菜单请按 q ！"
 	systemctl status shadowsocks-rust
 	Start_Menu
@@ -511,17 +511,17 @@ sysArch
 action=$1
 	echo && echo -e "  
 ==================================
-Shadowsocks-Rust 管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
+Shadowsocks Rust 管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
 ==================================
  ${Green_font_prefix} 0.${Font_color_suffix} 更新脚本
 ——————————————————————————————————
- ${Green_font_prefix} 1.${Font_color_suffix} 安装 Shadowsocks-Rust
- ${Green_font_prefix} 2.${Font_color_suffix} 更新 Shadowsocks-Rust
- ${Green_font_prefix} 3.${Font_color_suffix} 卸载 Shadowsocks-Rust
+ ${Green_font_prefix} 1.${Font_color_suffix} 安装 Shadowsocks Rust
+ ${Green_font_prefix} 2.${Font_color_suffix} 更新 Shadowsocks Rust
+ ${Green_font_prefix} 3.${Font_color_suffix} 卸载 Shadowsocks Rust
 ——————————————————————————————————
- ${Green_font_prefix} 4.${Font_color_suffix} 启动 Shadowsocks-Rust
- ${Green_font_prefix} 5.${Font_color_suffix} 停止 Shadowsocks-Rust
- ${Green_font_prefix} 6.${Font_color_suffix} 重启 Shadowsocks-Rust
+ ${Green_font_prefix} 4.${Font_color_suffix} 启动 Shadowsocks Rust
+ ${Green_font_prefix} 5.${Font_color_suffix} 停止 Shadowsocks Rust
+ ${Green_font_prefix} 6.${Font_color_suffix} 重启 Shadowsocks Rust
 ——————————————————————————————————
  ${Green_font_prefix} 7.${Font_color_suffix} 设置 配置信息
  ${Green_font_prefix} 8.${Font_color_suffix} 查看 配置信息
