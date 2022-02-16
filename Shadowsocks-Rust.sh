@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.0.9"
+sh_ver="1.1.1"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -475,7 +475,7 @@ Update_Shell(){
 		read -p "(默认：y)：" yn
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ ${yn} == [Yy] ]]; then
-			wget -NO shadowsocks-rust.sh --no-check-certificate https://git.io/Shadowsocks-Rust.sh && chmod +x shadowsocks-rust.sh && ./shadowsocks-rust.sh
+			wget -O shadowsocks-rust.sh --no-check-certificate https://git.io/Shadowsocks-Rust.sh && chmod +x shadowsocks-rust.sh && ./shadowsocks-rust.sh
 			echo -e "脚本已更新为最新版本[ ${sh_new_ver} ]！"
 			echo -e "3s后执行新脚本"
             sleep 3s
