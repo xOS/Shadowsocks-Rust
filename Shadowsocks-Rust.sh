@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.2.3"
+sh_ver="1.2.4"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -538,10 +538,6 @@ Before_Start_Menu() {
     Start_Menu
 }
 
-Exit_Menu() {
-    exit 1
-}
-
 Start_Menu(){
 clear
 check_root
@@ -612,7 +608,7 @@ Shadowsocks Rust 管理脚本 ${Red_font_prefix}[v${sh_ver}]${Font_color_suffix}
 		Status
 		;;
 		10)
-		Exit_Menu
+		exit 1
 		;;
 		*)
 		echo "请输入正确数字 [0-10]"
