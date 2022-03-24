@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.2.8"
+sh_ver="1.2.9"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -123,23 +123,85 @@ check_ver_comparison(){
 	fi
 }
 
-Download(){
+# Download(){
+# 	if [[ ! -e "${FOLDER}" ]]; then
+# 		mkdir "${FOLDER}"
+# 	# else
+# 		# [[ -e "${FILE}" ]] && rm -rf "${FILE}"
+# 	fi
+# 	echo -e "${Info} 开始下载 Shadowsocks Rust ……"
+# 	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
+# 	[[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]] && echo -e "${Error} Shadowsocks Rust 下载失败！" && exit 1
+# 	tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
+# 	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks Rust 压缩包解压失败！" && exit 1
+# 	rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
+# 	chmod +x ssserver
+# 	mv -f ssserver "${FILE}"
+# 	rm sslocal ssmanager ssservice ssurl
+# 	echo "${new_ver}" > ${Now_ver_File}
+#     echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
+# }
+
+# 官方源
+stable_Download() {
+	echo -e "${Info} 默认开始下载官方源 Shadowsocks Rust ……"
+	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
+	if [[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]]; then
+		echo -e "${Error} Shadowsocks Rust 官方源下载失败！"
+		return 1 && exit 1
+	else
+		tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
+	fi
+	if [[ ! -e "ssserver" ]]; then
+		echo -e "${Error} Shadowsocks Rust 解压失败！"
+		echo -e "${Error} Shadowsocks Rust 安装失败 !"
+		return 1 && exit 1
+	else
+		rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
+        chmod +x ssserver
+	    mv -f ssserver "${FILE}"
+	    rm sslocal ssmanager ssservice ssurl
+	    echo "${new_ver}" > ${Now_ver_File}
+        echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
+		return 0
+	fi
+}
+
+# 备用源
+backup_Download() {
+	echo -e "${Info} 试图请求 备份源(旧版本) Shadowsocks Rust ……"
+	wget --no-check-certificate -N "https://raw.githubusercontent.com/xOS/Others/master/shadowsocks-rust/v1.14.1/shadowsocks-v1.14.1.${arch}-unknown-linux-gnu.tar.xz"
+	if [[ ! -e "shadowsocks-v1.14.1.${arch}-unknown-linux-gnu.tar.xz" ]]; then
+		echo -e "${Error} Shadowsocks Rust 备份源(旧版本) 下载失败！"
+		return 1 && exit 1
+	else
+		tar -xvf "shadowsocks-v1.14.1.${arch}-unknown-linux-gnu.tar.xz"
+	fi
+	if [[ ! -e "ssserver" ]]; then
+		echo -e "${Error} Shadowsocks Rust 备份源(旧版本) 解压失败 !"
+		echo -e "${Error} Shadowsocks Rust 备份源(旧版本) 安装失败 !"
+		return 1 && exit 1
+	else
+		rm -rf "shadowsocks-v1.14.1.${arch}-unknown-linux-gnu.tar.xz"
+		chmod +x ssserver
+	    mv -f ssserver "${FILE}"
+	    rm sslocal ssmanager ssservice ssurl
+		echo "v1.14.1" > ${Now_ver_File}
+		echo -e "${Info} Shadowsocks Rust 备份源(旧版本) 主程序下载安装完毕！"
+		return 0
+	fi
+}
+
+Download() {
 	if [[ ! -e "${FOLDER}" ]]; then
 		mkdir "${FOLDER}"
 	# else
 		# [[ -e "${FILE}" ]] && rm -rf "${FILE}"
 	fi
-	echo -e "${Info} 开始下载 Shadowsocks Rust ……"
-	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	[[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]] && echo -e "${Error} Shadowsocks Rust 下载失败！" && exit 1
-	tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks Rust 压缩包解压失败！" && exit 1
-	rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	chmod +x ssserver
-	mv -f ssserver "${FILE}"
-	rm sslocal ssmanager ssservice ssurl
-	echo "${new_ver}" > ${Now_ver_File}
-    echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
+	stable_Download
+	if [[ $? != 0 ]]; then
+		backup_Download
+	fi
 }
 
 Service(){
@@ -251,7 +313,7 @@ Set_cipher(){
 ==================================	
  ${Green_font_prefix} 1.${Font_color_suffix} chacha20-ietf-poly1305 ${Green_font_prefix}(推荐)${Font_color_suffix}
  ${Green_font_prefix} 2.${Font_color_suffix} aes-128-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
- ${Green_font_prefix} 3.${Font_color_suffix} aes-256-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
+ ${Green_font_prefix} 3.${Font_color_suffix} aes-256-gcm ${Green_font_prefix}(默认)${Font_color_suffix}
  ${Green_font_prefix} 4.${Font_color_suffix} plain ${Red_font_prefix}(不推荐)${Font_color_suffix}
  ${Green_font_prefix} 5.${Font_color_suffix} none ${Red_font_prefix}(不推荐)${Font_color_suffix}
  ${Green_font_prefix} 6.${Font_color_suffix} table
@@ -263,8 +325,8 @@ Set_cipher(){
  ${Green_font_prefix}12.${Font_color_suffix} chacha20-ietf
 ==================================
  ${Tip} 如需其它加密方式请手动修改配置文件 !" && echo
-	read -e -p "(默认: 1. chacha20-ietf-poly1305)：" cipher
-	[[ -z "${cipher}" ]] && cipher="1"
+	read -e -p "(默认: 3. aes-256-gcm)：" cipher
+	[[ -z "${cipher}" ]] && cipher="3"
 	if [[ ${cipher} == "1" ]]; then
 		cipher="chacha20-ietf-poly1305"
 	elif [[ ${cipher} == "2" ]]; then
@@ -290,7 +352,7 @@ Set_cipher(){
 	elif [[ ${cipher} == "12" ]]; then
 		cipher="chacha20-ietf"
 	else
-		cipher="chacha20-ietf-poly1305"
+		cipher="aes-256-gcm"
 	fi
 	echo && echo "=================================="
 	echo -e "加密：${Red_background_prefix} ${cipher} ${Font_color_suffix}"
