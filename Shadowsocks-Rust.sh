@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.2.6"
+sh_ver="1.2.7"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -113,9 +113,9 @@ check_ver_comparison(){
 			check_status
 			[[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
 			\cp "${CONF}" "/tmp/config.json"
-			rm -rf ${FOLDER}
+			# rm -rf ${FOLDER}
 			Download
-			mv "/tmp/config.json" "${CONF}"
+			mv -f "/tmp/config.json" "${CONF}"
 			Start
 		fi
 	else
@@ -126,8 +126,8 @@ check_ver_comparison(){
 Download(){
 	if [[ ! -e "${FOLDER}" ]]; then
 		mkdir "${FOLDER}"
-	else
-		[[ -e "${FILE}" ]] && rm -rf "${FILE}"
+	# else
+		# [[ -e "${FILE}" ]] && rm -rf "${FILE}"
 	fi
 	echo -e "${Info} 开始下载 Shadowsocks Rust ……"
 	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
@@ -136,7 +136,7 @@ Download(){
 	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks Rust 压缩包解压失败！" && exit 1
 	rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
 	chmod +x ssserver
-	mv ssserver "${FILE}"
+	mv -f ssserver "${FILE}"
 	rm sslocal ssmanager ssservice ssurl
 	echo "${new_ver}" > ${Now_ver_File}
     echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
