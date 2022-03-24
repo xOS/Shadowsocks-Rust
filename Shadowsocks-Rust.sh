@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.2.7"
+sh_ver="1.2.8"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -111,7 +111,7 @@ check_ver_comparison(){
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ $yn == [Yy] ]]; then
 			check_status
-			[[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
+			# [[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
 			\cp "${CONF}" "/tmp/config.json"
 			# rm -rf ${FOLDER}
 			Download
