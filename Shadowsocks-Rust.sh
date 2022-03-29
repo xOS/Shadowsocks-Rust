@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.2.9"
+sh_ver="1.3.0"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -162,6 +162,7 @@ stable_Download() {
 	    mv -f ssserver "${FILE}"
 	    rm sslocal ssmanager ssservice ssurl
 	    echo "${new_ver}" > ${Now_ver_File}
+
         echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
 		return 0
 	fi
@@ -469,6 +470,7 @@ Update(){
 	check_installed_status
 	check_new_ver
 	check_ver_comparison
+	systemctl restart shadowsocks-rust
 	echo -e "${Info} Shadowsocks Rust 更新完毕！"
     sleep 3s
     Start_Menu
