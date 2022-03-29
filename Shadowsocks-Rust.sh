@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://www.nange.cn
 #=================================================
 
-sh_ver="1.3.0"
+sh_ver="1.3.1"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/shadowsocks-rust"
@@ -116,7 +116,7 @@ check_ver_comparison(){
 			# rm -rf ${FOLDER}
 			Download
 			mv -f "/tmp/config.json" "${CONF}"
-			Start
+			Restart
 		fi
 	else
 		echo -e "${Info} 当前 Shadowsocks Rust 已是最新版本 [ ${new_ver} ] ！" && exit 1
@@ -470,7 +470,6 @@ Update(){
 	check_installed_status
 	check_new_ver
 	check_ver_comparison
-	systemctl restart shadowsocks-rust
 	echo -e "${Info} Shadowsocks Rust 更新完毕！"
     sleep 3s
     Start_Menu
