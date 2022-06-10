@@ -9,13 +9,13 @@ export PATH
 #	WebSite: https://qste.com
 #=================================================
 
-sh_ver="1.3.2"
+sh_ver="1.4.0"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
-FOLDER="/etc/shadowsocks-rust"
-FILE="/usr/local/bin/shadowsocks-rust"
-CONF="/etc/shadowsocks-rust/config.json"
-Now_ver_File="/etc/shadowsocks-rust/ver.txt"
+FOLDER="/etc/ss-rust"
+FILE="/usr/local/bin/ss-rust"
+CONF="/etc/ss-rust/config.json"
+Now_ver_File="/etc/ss-rust/ver.txt"
 Local="/etc/sysctl.d/local.conf"
 
 Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m" && Yellow_font_prefix="\033[0;33m"
@@ -94,7 +94,7 @@ check_installed_status(){
 }
 
 check_status(){
-	status=`systemctl status shadowsocks-rust | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1`
+	status=`systemctl status ss-rust | grep Active | awk '{print $3}' | cut -d "(" -f2 | cut -d ")" -f1`
 }
 
 check_new_ver(){
@@ -111,7 +111,7 @@ check_ver_comparison(){
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ $yn == [Yy] ]]; then
 			check_status
-			# [[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
+			# [[ "$status" == "running" ]] && systemctl stop ss-rust
 			\cp "${CONF}" "/tmp/config.json"
 			# rm -rf ${FOLDER}
 			Download
@@ -219,10 +219,10 @@ Restart=on-failure
 RestartSec=5s
 DynamicUser=true
 ExecStartPre=/bin/sh -c 'ulimit -n 51200'
-ExecStart=/usr/local/bin/shadowsocks-rust -c /etc/shadowsocks-rust/config.json
+ExecStart=/usr/local/bin/ss-rust -c /etc/ss-rust/config.json
 [Install]
-WantedBy=multi-user.target' > /etc/systemd/system/shadowsocks-rust.service
-systemctl enable --now shadowsocks-rust
+WantedBy=multi-user.target' > /etc/systemd/system/ss-rust.service
+systemctl enable --now ss-rust
 	echo -e "${Info} Shadowsocks Rust 服务配置完成！"
 }
 
@@ -441,7 +441,7 @@ Start(){
 	check_installed_status
 	check_status
 	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks Rust 已在运行 ！" && exit 1
-	systemctl start shadowsocks-rust
+	systemctl start ss-rust
 	check_status
 	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks Rust 启动成功 ！"
     sleep 3s
@@ -452,14 +452,14 @@ Stop(){
 	check_installed_status
 	check_status
 	[[ !"$status" == "running" ]] && echo -e "${Error} Shadowsocks Rust 没有运行，请检查！" && exit 1
-	systemctl stop shadowsocks-rust
+	systemctl stop ss-rust
     sleep 3s
     Start_Menu
 }
 
 Restart(){
 	check_installed_status
-	systemctl restart shadowsocks-rust
+	systemctl restart ss-rust
 	echo -e "${Info} Shadowsocks Rust 重启完毕 ！"
 	sleep 3s
 	View
@@ -483,8 +483,8 @@ Uninstall(){
 	[[ -z ${unyn} ]] && unyn="n"
 	if [[ ${unyn} == [Yy] ]]; then
 		check_status
-		[[ "$status" == "running" ]] && systemctl stop shadowsocks-rust
-        systemctl disable shadowsocks-rust
+		[[ "$status" == "running" ]] && systemctl stop ss-rust
+        systemctl disable ss-rust
 		rm -rf "${FOLDER}"
 		rm -rf "${FILE}"
 		echo && echo "Shadowsocks Rust 卸载完成！" && echo
@@ -559,20 +559,20 @@ View(){
 Status(){
 	echo -e "${Info} 获取 Shadowsocks Rust 活动日志 ……"
 	echo -e "${Tip} 返回主菜单请按 q ！"
-	systemctl status shadowsocks-rust
+	systemctl status ss-rust
 	Start_Menu
 }
 
 Update_Shell(){
 	echo -e "当前版本为 [ ${sh_ver} ]，开始检测最新版本..."
-	sh_new_ver=$(wget --no-check-certificate -qO- "https://raw.githubusercontent.com/xOS/Shadowsocks-Rust/master/Shadowsocks-Rust.sh"|grep 'sh_ver="'|awk -F "=" '{print $NF}'|sed 's/\"//g'|head -1)
+	sh_new_ver=$(wget --no-check-certificate -qO- "https://raw.githubusercontent.com/xOS/Shadowsocks-Rust/master/ss-rust.sh"|grep 'sh_ver="'|awk -F "=" '{print $NF}'|sed 's/\"//g'|head -1)
 	[[ -z ${sh_new_ver} ]] && echo -e "${Error} 检测最新版本失败 !" && Start_Menu
 	if [[ ${sh_new_ver} != ${sh_ver} ]]; then
 		echo -e "发现新版本[ ${sh_new_ver} ]，是否更新？[Y/n]"
 		read -p "(默认：y)：" yn
 		[[ -z "${yn}" ]] && yn="y"
 		if [[ ${yn} == [Yy] ]]; then
-			wget -O ss-rust.sh --no-check-certificate https://git.io/Shadowsocks-Rust.sh && chmod +x ss-rust.sh
+			wget -O ss-rust.sh --no-check-certificate https://raw.githubusercontent.com/xOS/Shadowsocks-Rust/master/ss-rust.sh && chmod +x ss-rust.sh
 			echo -e "脚本已更新为最新版本[ ${sh_new_ver} ]！"
 			echo -e "3s后执行新脚本"
             sleep 3s
