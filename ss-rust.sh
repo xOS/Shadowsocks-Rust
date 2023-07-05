@@ -6,10 +6,10 @@ export PATH
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust 管理脚本
 #	Author: 翠花
-#	WebSite: https://qste.com
+#	WebSite: https://about.nange.cn
 #=================================================
 
-sh_ver="1.4.0"
+sh_ver="1.4.1"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/ss-rust"
@@ -325,6 +325,13 @@ Set_cipher(){
  ${Green_font_prefix}11.${Font_color_suffix} rc4-md5
  ${Green_font_prefix}12.${Font_color_suffix} chacha20-ietf
 ==================================
+ ${Tip} AEAD 2022 加密（须v1.15.0及以上版本且密码须经过Base64加密）
+==================================	
+ ${Green_font_prefix}13.${Font_color_suffix} 2022-blake3-aes-128-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
+ ${Green_font_prefix}14.${Font_color_suffix} 2022-blake3-aes-256-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
+ ${Green_font_prefix}15.${Font_color_suffix} 2022-blake3-chacha20-poly1305
+ ${Green_font_prefix}16.${Font_color_suffix} 2022-blake3-chacha8-poly1305
+ ==================================
  ${Tip} 如需其它加密方式请手动修改配置文件 !" && echo
 	read -e -p "(默认: 3. aes-256-gcm)：" cipher
 	[[ -z "${cipher}" ]] && cipher="3"
@@ -352,6 +359,14 @@ Set_cipher(){
 		cipher="arc4-md5"
 	elif [[ ${cipher} == "12" ]]; then
 		cipher="chacha20-ietf"
+	elif [[ ${cipher} == "13" ]]; then
+		cipher="2022-blake3-aes-128-gcm"
+	elif [[ ${cipher} == "14" ]]; then
+		cipher="2022-blake3-aes-256-gcm"
+	elif [[ ${cipher} == "15" ]]; then
+		cipher="2022-blake3-chacha20-poly1305"
+	elif [[ ${cipher} == "16" ]]; then
+		cipher="2022-blake3-chacha8-poly1305"		
 	else
 		cipher="aes-256-gcm"
 	fi
