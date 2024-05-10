@@ -246,7 +246,7 @@ Write_config(){
     "mode": "tcp_and_udp",
     "user":"nobody",
     "timeout":300,
-    "nameserver":"8.8.8.8"
+    "dns":"8.8.8.8"
 }
 EOF
 }
