@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://about.nange.cn
 #=================================================
 
-sh_ver="1.4.1"
+sh_ver="1.4.2"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/ss-rust"
@@ -229,9 +229,11 @@ systemctl enable --now ss-rust
 
 Installation_dependency(){
 	if [[ ${release} == "centos" ]]; then
-		yum update && yum install jq gzip wget curl unzip xz -y
+		yum update
+		yum install jq gzip wget curl unzip xz -y
 	else
-		apt-get update && apt-get install jq gzip wget curl unzip xz-utils -y
+		apt-get update
+		apt-get install jq gzip wget curl unzip xz-utils -y
 	fi
 	\cp -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 }
@@ -313,9 +315,9 @@ Set_password(){
 Set_cipher(){
 	echo -e "请选择 Shadowsocks Rust 加密方式
 ==================================	
- ${Green_font_prefix} 1.${Font_color_suffix} chacha20-ietf-poly1305 ${Green_font_prefix}(推荐)${Font_color_suffix}
- ${Green_font_prefix} 2.${Font_color_suffix} aes-128-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
- ${Green_font_prefix} 3.${Font_color_suffix} aes-256-gcm ${Green_font_prefix}(默认)${Font_color_suffix}
+ ${Green_font_prefix} 1.${Font_color_suffix} aes-128-gcm ${Green_font_prefix}(默认)${Font_color_suffix}
+ ${Green_font_prefix} 2.${Font_color_suffix} aes-256-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
+ ${Green_font_prefix} 3.${Font_color_suffix} chacha20-ietf-poly1305 ${Green_font_prefix}${Font_color_suffix}
  ${Green_font_prefix} 4.${Font_color_suffix} plain ${Red_font_prefix}(不推荐)${Font_color_suffix}
  ${Green_font_prefix} 5.${Font_color_suffix} none ${Red_font_prefix}(不推荐)${Font_color_suffix}
  ${Green_font_prefix} 6.${Font_color_suffix} table
@@ -334,14 +336,14 @@ Set_cipher(){
  ${Green_font_prefix}16.${Font_color_suffix} 2022-blake3-chacha8-poly1305
  ==================================
  ${Tip} 如需其它加密方式请手动修改配置文件 !" && echo
-	read -e -p "(默认: 3. aes-256-gcm)：" cipher
-	[[ -z "${cipher}" ]] && cipher="3"
+	read -e -p "(默认: 1. aes-128-gcm)：" cipher
+	[[ -z "${cipher}" ]] && cipher="1"
 	if [[ ${cipher} == "1" ]]; then
-		cipher="chacha20-ietf-poly1305"
-	elif [[ ${cipher} == "2" ]]; then
 		cipher="aes-128-gcm"
-	elif [[ ${cipher} == "3" ]]; then
+	elif [[ ${cipher} == "2" ]]; then
 		cipher="aes-256-gcm"
+	elif [[ ${cipher} == "3" ]]; then
+		cipher="chacha20-ietf-poly1305"
 	elif [[ ${cipher} == "4" ]]; then
 		cipher="plain"
 	elif [[ ${cipher} == "5" ]]; then
@@ -369,7 +371,7 @@ Set_cipher(){
 	elif [[ ${cipher} == "16" ]]; then
 		cipher="2022-blake3-chacha8-poly1305"		
 	else
-		cipher="aes-256-gcm"
+		cipher="aes-128-gcm"
 	fi
 	echo && echo "=================================="
 	echo -e "加密：${Red_background_prefix} ${cipher} ${Font_color_suffix}"
