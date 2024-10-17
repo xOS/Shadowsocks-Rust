@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://about.nange.cn
 #=================================================
 
-sh_ver="1.4.2"
+sh_ver="1.4.3"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/ss-rust"
@@ -230,10 +230,10 @@ systemctl enable --now ss-rust
 Installation_dependency(){
 	if [[ ${release} == "centos" ]]; then
 		yum update
-		yum install jq gzip wget curl unzip xz -y
+		yum install jq gzip wget curl unzip xz openssl -y
 	else
 		apt-get update
-		apt-get install jq gzip wget curl unzip xz-utils -y
+		apt-get install jq gzip wget curl unzip xz-utils openssl -y
 	fi
 	\cp -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 }
@@ -306,7 +306,7 @@ ${Green_font_prefix} 1.${Font_color_suffix} 开启  ${Green_font_prefix} 2.${Fon
 Set_password(){
 	echo "请输入 Shadowsocks Rust 密码 [0-9][a-z][A-Z]"
 	read -e -p "(默认：随机生成)：" password
-	[[ -z "${password}" ]] && password=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16)
+	[[ -z "${password}" ]] && password=$(openssl rand -base64 16)
 	echo && echo "=================================="
 	echo -e "密码：${Red_background_prefix} ${password} ${Font_color_suffix}"
 	echo "==================================" && echo
