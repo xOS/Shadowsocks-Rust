@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://about.nange.cn
 #=================================================
 
-sh_ver="1.4.4"
+sh_ver="1.4.5"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/ss-rust"
@@ -570,7 +570,14 @@ View(){
 	echo -e "——————————————————————————————————"
 	[[ ! -z "${link_ipv4}" ]] && echo -e "${link_ipv4}"
 	[[ ! -z "${link_ipv6}" ]] && echo -e "${link_ipv6}"
-	echo -e "——————————————————————————————————"
+	echo -e "—————————————————————————"
+	echo -e "${Info} Surge 配置："
+	if [[ "${ipv4}" != "IPv4_Error" ]]; then
+	echo -e "$(uname -n) = ss,${ipv4},${port},encrypt-method=${cipher},password=${password},tfo=${tfo},udp-relay=true,ecn=true"
+	else
+	echo -e "$(uname -n) = ss,${ipv6},${port},encrypt-method=${cipher},password=${password},tfo=${tfo},udp-relay=true,ecn=true"
+	fi
+  echo -e "—————————————————————————"
 	Before_Start_Menu
 }
 
