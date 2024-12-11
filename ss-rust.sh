@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://about.nange.cn
 #=================================================
 
-sh_ver="1.4.7"
+sh_ver="1.4.8"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/ss-rust"
@@ -435,16 +435,25 @@ Install(){
 	Write_config
 	echo -e "${Info} 所有步骤 安装完毕，开始启动..."
 	Start
-	View
+	echo -e "${Info} 启动完成，查看配置..."
+    View
 }
 
 Start(){
-	check_installed_status
-	check_status
-	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks Rust 已在运行 ！" && exit 1
-	systemctl start ss-rust
-	check_status
-	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks Rust 启动成功 ！"
+    check_installed_status
+    check_status
+    if [[ "$status" == "running" ]]; then
+        echo -e "${Info} Shadowsocks Rust 已在运行！"
+    else
+        systemctl start ss-rust
+        check_status
+        if [[ "$status" == "running" ]]; then
+            echo -e "${Info} Shadowsocks Rust 启动成功！"
+        else
+            echo -e "${Error} Shadowsocks Rust 启动失败！"
+            exit 1
+        fi
+    fi
     sleep 3s
 }
 
