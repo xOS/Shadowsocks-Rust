@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://about.nange.cn
 #=================================================
 
-sh_ver="1.4.5"
+sh_ver="1.4.9"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/ss-rust"
@@ -124,25 +124,6 @@ check_ver_comparison(){
 	fi
 }
 
-# Download(){
-# 	if [[ ! -e "${FOLDER}" ]]; then
-# 		mkdir "${FOLDER}"
-# 	# else
-# 		# [[ -e "${FILE}" ]] && rm -rf "${FILE}"
-# 	fi
-# 	echo -e "${Info} 开始下载 Shadowsocks Rust ……"
-# 	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-# 	[[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]] && echo -e "${Error} Shadowsocks Rust 下载失败！" && exit 1
-# 	tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-# 	[[ ! -e "ssserver" ]] && echo -e "${Error} Shadowsocks Rust 压缩包解压失败！" && exit 1
-# 	rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-# 	chmod +x ssserver
-# 	mv -f ssserver "${FILE}"
-# 	rm sslocal ssmanager ssservice ssurl
-# 	echo "${new_ver}" > ${Now_ver_File}
-#     echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
-# }
-
 # 官方源
 stable_Download() {
 	echo -e "${Info} 默认开始下载官方源 Shadowsocks Rust ……"
@@ -249,7 +230,7 @@ Write_config(){
     "mode": "tcp_and_udp",
     "user":"nobody",
     "timeout":300,
-    "nameserver":"8.8.8.8"
+    "nameserver":"1.1.1.1"
 }
 EOF
 }
@@ -305,8 +286,24 @@ ${Green_font_prefix} 1.${Font_color_suffix} 开启  ${Green_font_prefix} 2.${Fon
 
 Set_password(){
 	echo "请输入 Shadowsocks Rust 密码 [0-9][a-z][A-Z]"
-	read -e -p "(默认：随机生成 Base64)：" password
-	[[ -z "${password}" ]] && password=$(openssl rand -base64 16)
+	read -e -p "(默认：随机生成)：" password
+	# 当用户未输入密码时，执行默认生成逻辑
+	if [[ -z "${password}" ]]; then
+		# 判断是否为2022系列加密
+		if [[ ${cipher} == "2022-blake3-aes-256-gcm" || ${cipher} == "2022-blake3-chacha20-poly1305" ]]; then
+			# 2022系列必须使用指定长度的Base64密钥
+			echo -e "${Tip} 为 ${cipher} 生成 32 字节 Base64 密钥..."
+			password=$(openssl rand -base64 32)
+		elif [[ ${cipher} == "2022-blake3-aes-128-gcm" ]]; then
+			# 2022系列必须使用指定长度的Base64密钥
+			echo -e "${Tip} 为 ${cipher} 生成 16 字节 Base64 密钥..."
+			password=$(openssl rand -base64 16)
+		else
+			# 其他加密方式，生成一个普通的16位字母和数字的随机密码
+			echo -e "${Tip} 为 ${cipher} 生成 16 位随机密码 (非Base64)..."
+			password=$(< /dev/urandom tr -dc 'a-zA-Z0-9' | head -c 16)
+		fi
+	fi
 	echo && echo "=================================="
 	echo -e "密码：${Red_background_prefix} ${password} ${Font_color_suffix}"
 	echo "==================================" && echo
@@ -333,7 +330,6 @@ Set_cipher(){
  ${Green_font_prefix}13.${Font_color_suffix} 2022-blake3-aes-128-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
  ${Green_font_prefix}14.${Font_color_suffix} 2022-blake3-aes-256-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
  ${Green_font_prefix}15.${Font_color_suffix} 2022-blake3-chacha20-poly1305
- ${Green_font_prefix}16.${Font_color_suffix} 2022-blake3-chacha8-poly1305
  ==================================
  ${Tip} 如需其它加密方式请手动修改配置文件 !" && echo
 	read -e -p "(默认: 1. aes-128-gcm)：" cipher
@@ -367,9 +363,7 @@ Set_cipher(){
 	elif [[ ${cipher} == "14" ]]; then
 		cipher="2022-blake3-aes-256-gcm"
 	elif [[ ${cipher} == "15" ]]; then
-		cipher="2022-blake3-chacha20-poly1305"
-	elif [[ ${cipher} == "16" ]]; then
-		cipher="2022-blake3-chacha8-poly1305"		
+		cipher="2022-blake3-chacha20-poly1305"		
 	else
 		cipher="aes-128-gcm"
 	fi
@@ -383,8 +377,8 @@ Set(){
 	echo && echo -e "你要做什么？
 ==================================
  ${Green_font_prefix}1.${Font_color_suffix}  修改 端口配置
- ${Green_font_prefix}2.${Font_color_suffix}  修改 密码配置
- ${Green_font_prefix}3.${Font_color_suffix}  修改 加密配置
+ ${Green_font_prefix}2.${Font_color_suffix}  修改 加密配置
+ ${Green_font_prefix}3.${Font_color_suffix}  修改 密码配置
  ${Green_font_prefix}4.${Font_color_suffix}  修改 TFO 配置
 ==================================
  ${Green_font_prefix}5.${Font_color_suffix}  修改 全部配置" && echo
@@ -393,24 +387,24 @@ Set(){
 	if [[ "${modify}" == "1" ]]; then
 		Read_config
 		Set_port
-		password=${password}
 		cipher=${cipher}
+		password=${password}
 		tfo=${tfo}
 		Write_config
 		Restart
 	elif [[ "${modify}" == "2" ]]; then
 		Read_config
-		Set_password
+		Set_cipher
 		port=${port}
-		cipher=${cipher}
+		password=${password}
 		tfo=${tfo}
 		Write_config
 		Restart
 	elif [[ "${modify}" == "3" ]]; then
 		Read_config
-		Set_cipher
+		cipher=${cipher}
+		Set_password
 		port=${port}
-		password=${password}
 		tfo=${tfo}
 		Write_config
 		Restart
@@ -425,8 +419,8 @@ Set(){
 	elif [[ "${modify}" == "5" ]]; then
 		Read_config
 		Set_port
-		Set_password
 		Set_cipher
+		Set_password
 		Set_tfo
 		Write_config
 		Restart
@@ -439,8 +433,8 @@ Install(){
 	[[ -e ${FILE} ]] && echo -e "${Error} 检测到 Shadowsocks Rust 已安装！" && exit 1
 	echo -e "${Info} 开始设置 配置..."
 	Set_port
-	Set_password
 	Set_cipher
+	Set_password
 	Set_tfo
 	echo -e "${Info} 开始安装/配置 依赖..."
 	Installation_dependency
@@ -453,17 +447,26 @@ Install(){
 	Write_config
 	echo -e "${Info} 所有步骤 安装完毕，开始启动..."
 	Start
+	echo -e "${Info} 启动完成，查看配置..."
+    View
 }
 
 Start(){
-	check_installed_status
-	check_status
-	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks Rust 已在运行 ！" && exit 1
-	systemctl start ss-rust
-	check_status
-	[[ "$status" == "running" ]] && echo -e "${Info} Shadowsocks Rust 启动成功 ！"
+    check_installed_status
+    check_status
+    if [[ "$status" == "running" ]]; then
+        echo -e "${Info} Shadowsocks Rust 已在运行！"
+    else
+        systemctl start ss-rust
+        check_status
+        if [[ "$status" == "running" ]]; then
+            echo -e "${Info} Shadowsocks Rust 启动成功！"
+        else
+            echo -e "${Error} Shadowsocks Rust 启动失败！"
+            exit 1
+        fi
+    fi
     sleep 3s
-    Start_Menu
 }
 
 Stop(){
@@ -480,7 +483,6 @@ Restart(){
 	systemctl restart ss-rust
 	echo -e "${Info} Shadowsocks Rust 重启完毕 ！"
 	sleep 3s
-	View
     Start_Menu
 }
 
@@ -573,9 +575,9 @@ View(){
 	echo -e "—————————————————————————"
 	echo -e "${Info} Surge 配置："
 	if [[ "${ipv4}" != "IPv4_Error" ]]; then
-	echo -e "$(uname -n) = ss,${ipv4},${port},encrypt-method=${cipher},password=${password},tfo=${tfo},udp-relay=true,ecn=true"
+	echo -e "$(uname -n) = ss, ${ipv4},${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true, ecn=true"
 	else
-	echo -e "$(uname -n) = ss,${ipv6},${port},encrypt-method=${cipher},password=${password},tfo=${tfo},udp-relay=true,ecn=true"
+	echo -e "$(uname -n) = ss, ${ipv6},${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true, ecn=true"
 	fi
   echo -e "—————————————————————————"
 	Before_Start_Menu
