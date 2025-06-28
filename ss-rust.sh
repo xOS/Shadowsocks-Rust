@@ -9,7 +9,7 @@ export PATH
 #	WebSite: https://about.nange.cn
 #=================================================
 
-sh_ver="1.4.8"
+sh_ver="1.4.9"
 filepath=$(cd "$(dirname "$0")"; pwd)
 file_1=$(echo -e "${filepath}"|awk -F "$0" '{print $1}')
 FOLDER="/etc/ss-rust"
@@ -286,11 +286,23 @@ ${Green_font_prefix} 1.${Font_color_suffix} 开启  ${Green_font_prefix} 2.${Fon
 
 Set_password(){
 	echo "请输入 Shadowsocks Rust 密码 [0-9][a-z][A-Z]"
-	read -e -p "(默认：随机生成 Base64)：" password
-	if [[ ${cipher} == "2022-blake3-aes-256-gcm" ]]; then
-		[[ -z "${password}" ]] && password=$(openssl rand -base64 32)
-	else
-		[[ -z "${password}" ]] && password=$(openssl rand -base64 16)
+	read -e -p "(默认：随机生成)：" password
+	# 当用户未输入密码时，执行默认生成逻辑
+	if [[ -z "${password}" ]]; then
+		# 判断是否为2022系列加密
+		if [[ ${cipher} == "2022-blake3-aes-256-gcm" || ${cipher} == "2022-blake3-chacha20-poly1305" ]]; then
+			# 2022系列必须使用指定长度的Base64密钥
+			echo -e "${Tip} 为 ${cipher} 生成 32 字节 Base64 密钥..."
+			password=$(openssl rand -base64 32)
+		elif [[ ${cipher} == "2022-blake3-aes-128-gcm" ]]; then
+			# 2022系列必须使用指定长度的Base64密钥
+			echo -e "${Tip} 为 ${cipher} 生成 16 字节 Base64 密钥..."
+			password=$(openssl rand -base64 16)
+		else
+			# 其他加密方式，生成一个普通的16位字母和数字的随机密码
+			echo -e "${Tip} 为 ${cipher} 生成 16 位随机密码 (非Base64)..."
+			password=$(< /dev/urandom tr -dc 'a-zA-Z0-9' | head -c 16)
+		fi
 	fi
 	echo && echo "=================================="
 	echo -e "密码：${Red_background_prefix} ${password} ${Font_color_suffix}"
@@ -563,9 +575,9 @@ View(){
 	echo -e "—————————————————————————"
 	echo -e "${Info} Surge 配置："
 	if [[ "${ipv4}" != "IPv4_Error" ]]; then
-	echo -e "$(uname -n) = ss,${ipv4},${port},encrypt-method=${cipher},password=${password},tfo=${tfo},udp-relay=true,ecn=true"
+	echo -e "$(uname -n) = ss, ${ipv4},${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true, ecn=true"
 	else
-	echo -e "$(uname -n) = ss,${ipv6},${port},encrypt-method=${cipher},password=${password},tfo=${tfo},udp-relay=true,ecn=true"
+	echo -e "$(uname -n) = ss, ${ipv6},${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true, ecn=true"
 	fi
   echo -e "—————————————————————————"
 	Before_Start_Menu
