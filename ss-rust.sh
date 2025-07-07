@@ -10,7 +10,7 @@ export PATH
 #=================================================
 
 # 当前脚本版本号
-sh_ver="1.5.0"
+sh_ver="1.5.1"
 
 # Shadowsocks Rust 相关路径
 SS_Folder="/etc/ss-rust"
@@ -680,7 +680,25 @@ install(){
 
 install_stls(){
 	[[ -e ${STLS_File} ]] && echo -e "${Error} 检测到 Shadow TLS 已安装！" && exit 1
-	check_installed_status # 检查 SS 是否已安装
+	
+	# 检查 Shadowsocks Rust 是否已安装
+	if [[ ! -e ${SS_File} ]]; then
+		echo -e "${Error} 检测到 Shadowsocks Rust 尚未安装！"
+		echo -e "${Info} Shadow TLS 需要配合 Shadowsocks Rust 使用。"
+		echo -e "${Info} 建议先安装 Shadowsocks Rust，再安装 Shadow TLS。"
+		echo && read -e -p "是否现在安装 Shadowsocks Rust？[Y/n]：" install_ss_choice
+		[[ -z "${install_ss_choice}" ]] && install_ss_choice="Y"
+		if [[ ${install_ss_choice} == [Yy] ]]; then
+			echo -e "${Info} 开始安装 Shadowsocks Rust..."
+			install
+			echo -e "${Info} Shadowsocks Rust 安装完成，现在开始安装 Shadow TLS..."
+		else
+			echo -e "${Info} 已取消安装，返回上级菜单..."
+			shadowtls_menu
+			return
+		fi
+	fi
+	
 	echo -e "${Info} 开始设置 Shadow TLS 配置..."
 	read_config # 读取现有 SS 配置
 	
@@ -823,11 +841,11 @@ view_combined_config(){
 		echo -e " SS 密码：${Green_font_prefix}${password}${Font_color_suffix}"
 		echo -e " SS 加密：${Green_font_prefix}${cipher}${Font_color_suffix}"
 		echo -e "————————————————————————————————————————"
-		echo -e "${Info} Shadow TLS Surge 配置："
+		echo -e "${Info} Shadow TLS + SS Surge 配置："
 		if [[ "${ipv4}" != "IPv4_Error" ]]; then
-			echo -e "$(uname -n) = ss, ${ipv4}, ${stls_port}, encrypt-method=${cipher}, password=${password}, shadow-tls-password=${stls_password}, shadow-tls-sni=${stls_sni}, shadow-tls-version=3, udp-relay=true"
+			echo -e "$(uname -n) = ss, ${ipv4}, ${stls_port}, encrypt-method=${cipher}, password=${password}, shadow-tls-password=${stls_password}, shadow-tls-sni=${stls_sni}, shadow-tls-version=3, tfo=${tfo}, udp-relay=true, ecn=true, udp-port=${port}"
 		else
-			echo -e "$(uname -n) = ss, ${ipv6}, ${stls_port}, encrypt-method=${cipher}, password=${password}, shadow-tls-password=${stls_password}, shadow-tls-sni=${stls_sni}, shadow-tls-version=3, udp-relay=true"
+			echo -e "$(uname -n) = ss, ${ipv6}, ${stls_port}, encrypt-method=${cipher}, password=${password}, shadow-tls-password=${stls_password}, shadow-tls-sni=${stls_sni}, shadow-tls-version=3, tfo=${tfo}, udp-relay=true, ecn=true, udp-port=${port}"
 		fi
 		echo && echo -e "========================================"
 	fi
@@ -846,7 +864,7 @@ view_combined_config(){
 	echo -e "—————————————————————————"
 	echo -e "${Info} 原始 SS Surge 配置："
 	if [[ "${ipv4}" != "IPv4_Error" ]]; then
-		echo -e "$(uname -n)-direct = ss, ${ipv4}, ${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true"
+		echo -e "$(uname -n) = ss, ${ipv4}, ${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true, ecn=true"
 	fi
 	echo -e "========================================"
 	echo && echo -n " 按回车键返回主菜单..." && read
@@ -880,9 +898,9 @@ view_combined_config_with_return(){
 		echo -e "————————————————————————————————————————"
 		echo -e "${Info} Shadow TLS + SS Surge 配置："
 		if [[ "${ipv4}" != "IPv4_Error" ]]; then
-			echo -e "$(uname -n) = ss, ${ipv4}, ${stls_port}, encrypt-method=${cipher}, password=${password}, shadow-tls-password=${stls_password}, shadow-tls-sni=${stls_sni}, shadow-tls-version=3, udp-relay=true"
+			echo -e "$(uname -n) = ss, ${ipv4}, ${stls_port}, encrypt-method=${cipher}, password=${password}, shadow-tls-password=${stls_password}, shadow-tls-sni=${stls_sni}, shadow-tls-version=3, tfo=${tfo}, ecn=true, udp-relay=true, udp-port=${port}"
 		else
-			echo -e "$(uname -n) = ss, ${ipv6}, ${stls_port}, encrypt-method=${cipher}, password=${password}, shadow-tls-password=${stls_password}, shadow-tls-sni=${stls_sni}, shadow-tls-version=3, udp-relay=true"
+			echo -e "$(uname -n) = ss, ${ipv6}, ${stls_port}, encrypt-method=${cipher}, password=${password}, shadow-tls-password=${stls_password}, shadow-tls-sni=${stls_sni}, shadow-tls-version=3, tfo=${tfo}, ecn=true, udp-relay=true, udp-port=${port}"
 		fi
 		echo && echo -e "========================================"
 	fi
@@ -901,7 +919,7 @@ view_combined_config_with_return(){
 	echo -e "—————————————————————————"
 	echo -e "${Info} SS Surge 配置："
 	if [[ "${ipv4}" != "IPv4_Error" ]]; then
-		echo -e "$(uname -n)-direct = ss, ${ipv4}, ${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true"
+		echo -e "$(uname -n) = ss, ${ipv4}, ${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true, ecn=true"
 	fi
 	echo -e "========================================"
 	echo && echo -n " 按回车键返回主菜单..." && read
