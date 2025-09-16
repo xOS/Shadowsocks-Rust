@@ -10,7 +10,7 @@ export PATH
 #=================================================
 
 # 当前脚本版本号
-sh_ver="1.5.1"
+sh_ver="1.5.2"
 
 # Shadowsocks Rust 相关路径
 SS_Folder="/etc/ss-rust"
@@ -408,11 +408,47 @@ write_stls_config(){
 	
 	# 构建 dispatch 配置
 	if [[ -z "${stls_dispatch}" ]]; then
-		stls_dispatch_config="\"${stls_sni}\": \"1.1.1.1:443\",
+		# 没有现有配置，使用默认配置
+		# SNI 域名对应的目标地址也使用相同的域名:443
+		stls_dispatch_config="\"${stls_sni}\": \"${stls_sni}:443\",
         \"captive.apple.com\": \"captive.apple.com:443\""
 	else
-		stls_dispatch_config="${stls_dispatch}"
+		# 有现有配置，需要智能更新 SNI
+		if [[ ! -z "${stls_sni}" && -e ${STLS_Conf} ]]; then
+			# 查找需要更新的 SNI（排除 captive.apple.com）
+			old_sni=$(cat ${STLS_Conf}|jq -r '.server.tls_addr.dispatch | keys[] | select(. != "captive.apple.com")' 2>/dev/null | head -1)
+			if [[ ! -z "${old_sni}" && "${old_sni}" != "null" && "${old_sni}" != "${stls_sni}" ]]; then
+				# 需要替换旧的 SNI 为新的 SNI，同时更新键和值
+				echo -e "${Info} 更新主要 SNI 从 ${old_sni} 到 ${stls_sni}"
+				
+				# 使用 jq 来精确替换键和值
+				stls_dispatch_config=$(cat ${STLS_Conf} | jq -r --arg old_sni "${old_sni}" --arg new_sni "${stls_sni}" '
+					.server.tls_addr.dispatch | 
+					to_entries | 
+					map(if .key == $old_sni then (.key = $new_sni | .value = ($new_sni + ":443")) else . end) | 
+					map("\"\(.key)\": \"\(.value)\"") | 
+					join(",\n        ")
+				' 2>/dev/null)
+				
+				# 如果 jq 处理失败，回退到字符串替换
+				if [[ -z "${stls_dispatch_config}" || "${stls_dispatch_config}" == "null" ]]; then
+					echo -e "${Info} jq 处理失败，使用字符串替换"
+					# 先替换键，再替换对应的值
+					stls_dispatch_config=$(echo "${stls_dispatch}" | sed "s/\"${old_sni}\": \"[^\"]*\"/\"${stls_sni}\": \"${stls_sni}:443\"/g")
+				fi
+			else
+				# 如果没有找到需要更新的 SNI，或者 SNI 已经是正确的，直接使用现有配置
+				stls_dispatch_config="${stls_dispatch}"
+			fi
+		else
+			stls_dispatch_config="${stls_dispatch}"
+		fi
 	fi
+	
+	# 调试信息（可选，用于排查问题）
+	# echo -e "${Info} 调试信息："
+	# echo -e "  stls_sni: ${stls_sni}"
+	# echo -e "  stls_dispatch_config: ${stls_dispatch_config}"
 	
 	cat > ${STLS_Conf}<<-EOF
 {
@@ -435,6 +471,25 @@ write_stls_config(){
   }
 }
 EOF
+	
+	# 验证配置文件是否正确生成
+	if [[ -e ${STLS_Conf} ]]; then
+		# 检查配置文件是否为有效的 JSON
+		if ! jq . ${STLS_Conf} >/dev/null 2>&1; then
+			echo -e "${Error} Shadow TLS 配置文件格式错误！"
+			return 1
+		fi
+		echo -e "${Info} Shadow TLS 配置文件写入成功"
+		
+		# 显示当前配置的 SNI
+		current_sni=$(cat ${STLS_Conf}|jq -r '.server.tls_addr.dispatch | keys[0]' 2>/dev/null)
+		if [[ ! -z "${current_sni}" && "${current_sni}" != "null" ]]; then
+			echo -e "${Info} 当前配置的 SNI: ${Green_font_prefix}${current_sni}${Font_color_suffix}"
+		fi
+	else
+		echo -e "${Error} Shadow TLS 配置文件写入失败！"
+		return 1
+	fi
 }
 
 read_config(){
@@ -666,7 +721,7 @@ install(){
 	
 	# 询问是否继续安装 Shadow TLS
 	echo && echo -e "${Tip} 是否继续安装 Shadow TLS 流量伪装？"
-	read -e -p "(默认: N 不安装) [Y/n]: " install_stls_choice
+	read -e -p "(默认: N 不安装) [y/N]: " install_stls_choice
 	[[ -z "${install_stls_choice}" ]] && install_stls_choice="n"
 	
 	if [[ ${install_stls_choice} == [Yy] ]]; then
@@ -1021,13 +1076,18 @@ manage_stls_dispatch(){
 	
 	echo && echo -e "是否需要修改 dispatch 配置？
 ========================================
-${Green_font_prefix} 1.${Font_color_suffix} 保持当前配置
-${Green_font_prefix} 2.${Font_color_suffix} 重新配置所有条目
+${Green_font_prefix} 1.${Font_color_suffix} 使用默认配置（推荐）
+${Green_font_prefix} 2.${Font_color_suffix} 自定义配置所有条目
 ========================================"
-	read -e -p "(默认：1.保持当前)：" dispatch_choice
+	read -e -p "(默认：1.使用默认)：" dispatch_choice
 	[[ -z "${dispatch_choice}" ]] && dispatch_choice="1"
 	
-	if [[ "${dispatch_choice}" == "2" ]]; then
+	if [[ "${dispatch_choice}" == "1" ]]; then
+		# 使用默认配置，确保使用当前设置的 SNI
+		echo -e "${Info} 使用默认 dispatch 配置，SNI: ${stls_sni}"
+		# 不设置 stls_dispatch，让 write_stls_config 使用默认逻辑
+		stls_dispatch=""
+	elif [[ "${dispatch_choice}" == "2" ]]; then
 		echo -e "${Info} 重新配置 dispatch 条目"
 		echo "请输入 dispatch 配置 (每行格式: 域名:目标地址，回车结束)："
 		echo "示例: cloudflare.com:1.1.1.1:443"
@@ -1059,9 +1119,9 @@ ${Green_font_prefix} 2.${Font_color_suffix} 重新配置所有条目
 			stls_dispatch="${dispatch_entries}"
 			echo -e "${Info} 已配置 ${line_count} 个 dispatch 条目"
 		else
-			echo -e "${Info} 使用默认 dispatch 配置"
-			stls_dispatch="\"${stls_sni}\": \"1.1.1.1:443\",
-        \"captive.apple.com\": \"captive.apple.com:443\""
+			echo -e "${Info} 没有输入条目，使用默认 dispatch 配置"
+			# 不设置 stls_dispatch，让 write_stls_config 使用默认逻辑
+			stls_dispatch=""
 		fi
 	fi
 }
