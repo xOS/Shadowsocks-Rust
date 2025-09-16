@@ -10,7 +10,7 @@ export PATH
 #=================================================
 
 # 当前脚本版本号
-sh_ver="1.5.2"
+sh_ver="1.5.3"
 
 # Shadowsocks Rust 相关路径
 SS_Folder="/etc/ss-rust"
@@ -872,6 +872,7 @@ view_ss_only(){
 }
 
 view_combined_config(){
+	local menu_source="$1"  # 接收调用来源参数
 	check_installed_status
 	read_config
 	getipv4
@@ -922,8 +923,15 @@ view_combined_config(){
 		echo -e "$(uname -n) = ss, ${ipv4}, ${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true, ecn=true"
 	fi
 	echo -e "========================================"
-	echo && echo -n " 按回车键返回主菜单..." && read
-	start_menu
+	
+	# 根据调用来源返回到相应菜单
+	if [[ "$menu_source" == "shadowtls" ]]; then
+		echo && echo -n " 按回车键返回 Shadow TLS 菜单..." && read
+		shadowtls_menu
+	else
+		echo && echo -n " 按回车键返回主菜单..." && read
+		start_menu
+	fi
 }
 
 view_combined_config_with_return(){
@@ -977,8 +985,7 @@ view_combined_config_with_return(){
 		echo -e "$(uname -n) = ss, ${ipv4}, ${port}, encrypt-method=${cipher}, password=${password}, tfo=${tfo}, udp-relay=true, ecn=true"
 	fi
 	echo -e "========================================"
-	echo && echo -n " 按回车键返回主菜单..." && read
-	start_menu
+	echo && echo -n " 按回车键继续..." && read
 }
 
 # 综合 Shadow TLS 配置函数
@@ -1398,7 +1405,6 @@ stop_stls(){
 	[[ !"$stls_status" == "running" ]] && echo -e "${Error} Shadow TLS 没有运行，请检查！" && exit 1
 	systemctl stop shadowtls
 	sleep 3s
-	start_menu
 }
 
 restart(){
@@ -1414,7 +1420,6 @@ restart_stls(){
 	systemctl restart shadowtls
 	echo -e "${Info} Shadow TLS 重启完毕 ！"
 	sleep 3s
-	start_menu
 }
 
 update(){
@@ -1432,7 +1437,6 @@ update_stls(){
 	check_stls_ver_comparison
 	echo -e "${Info} Shadow TLS 更新完毕！"
 	sleep 3s
-	start_menu
 }
 
 # 脚本更新函数
@@ -1503,7 +1507,6 @@ uninstall_stls(){
 		echo && echo "卸载已取消..." && echo
 	fi
 	sleep 3s
-	start_menu
 }
 
 getipv4(){
