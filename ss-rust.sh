@@ -6,11 +6,11 @@ export PATH
 #	System Required: CentOS/Debian/Ubuntu
 #	Description: Shadowsocks Rust 管理脚本
 #	Author: 翠花
-#	WebSite: https://about.nange.cn
+#	WebSite: https://aapls.com
 #=================================================
 
 # 当前脚本版本号
-sh_ver="1.5.3"
+sh_ver="1.5.4"
 
 # Shadowsocks Rust 相关路径
 SS_Folder="/etc/ss-rust"
@@ -554,26 +554,68 @@ ${Green_font_prefix} 1.${Font_color_suffix} 开启  ${Green_font_prefix} 2.${Fon
 	echo "==================================" && echo
 }
 
+check_password_compatible(){
+	local check_cipher="$1"
+	local check_password="$2"
+	local decoded_len=""
+
+	[[ -z "${check_password}" ]] && return 1
+
+	case "${check_cipher}" in
+		"2022-blake3-aes-128-gcm")
+			decoded_len=$(printf '%s' "${check_password}" | base64 -d 2>/dev/null | wc -c | tr -d ' ')
+			[[ "${decoded_len}" == "16" ]] && return 0 || return 1
+			;;
+		"2022-blake3-aes-256-gcm"|"2022-blake3-chacha20-poly1305")
+			decoded_len=$(printf '%s' "${check_password}" | base64 -d 2>/dev/null | wc -c | tr -d ' ')
+			[[ "${decoded_len}" == "32" ]] && return 0 || return 1
+			;;
+		*)
+			return 0
+			;;
+	esac
+}
+
+show_2022_password_rule(){
+	echo -e "${Tip} 2022-blake3-aes-128-gcm 需要 Base64 解码后 16 字节密钥"
+	echo -e "${Tip} 2022-blake3-aes-256-gcm / 2022-blake3-chacha20-poly1305 需要 Base64 解码后 32 字节密钥"
+}
+
 set_password(){
-	echo "请输入 Shadowsocks Rust 密码 [0-9][a-z][A-Z]"
-	read -e -p "(默认：随机生成)：" password
-	# 当用户未输入密码时，执行默认生成逻辑
-	if [[ -z "${password}" ]]; then
-		# 判断是否为2022系列加密
-		if [[ ${cipher} == "2022-blake3-aes-256-gcm" || ${cipher} == "2022-blake3-chacha20-poly1305" ]]; then
-			# 2022系列必须使用指定长度的Base64密钥
-			echo -e "${Tip} 为 ${cipher} 生成 32 字节 Base64 密钥..."
-			password=$(openssl rand -base64 32)
-		elif [[ ${cipher} == "2022-blake3-aes-128-gcm" ]]; then
-			# 2022系列必须使用指定长度的Base64密钥
-			echo -e "${Tip} 为 ${cipher} 生成 16 字节 Base64 密钥..."
-			password=$(openssl rand -base64 16)
-		else
-			# 其他加密方式，生成一个普通的16位字母和数字的随机密码
-			echo -e "${Tip} 为 ${cipher} 生成 16 位随机密码 (非Base64)..."
-			password=$(< /dev/urandom tr -dc 'a-zA-Z0-9' | head -c 16)
+	while true
+	do
+		echo "请输入 Shadowsocks Rust 密码 [0-9][a-z][A-Z]"
+		if [[ ${cipher} == "2022-blake3-aes-128-gcm" || ${cipher} == "2022-blake3-aes-256-gcm" || ${cipher} == "2022-blake3-chacha20-poly1305" ]]; then
+			show_2022_password_rule
 		fi
-	fi
+		read -e -p "(默认：随机生成)：" password
+		# 当用户未输入密码时，执行默认生成逻辑
+		if [[ -z "${password}" ]]; then
+			# 判断是否为2022系列加密
+			if [[ ${cipher} == "2022-blake3-aes-256-gcm" || ${cipher} == "2022-blake3-chacha20-poly1305" ]]; then
+				# 2022系列必须使用指定长度的Base64密钥
+				echo -e "${Tip} 为 ${cipher} 生成 32 字节 Base64 密钥..."
+				password=$(openssl rand -base64 32)
+			elif [[ ${cipher} == "2022-blake3-aes-128-gcm" ]]; then
+				# 2022系列必须使用指定长度的Base64密钥
+				echo -e "${Tip} 为 ${cipher} 生成 16 字节 Base64 密钥..."
+				password=$(openssl rand -base64 16)
+			else
+				# 其他加密方式，生成一个普通的16位字母和数字的随机密码
+				echo -e "${Tip} 为 ${cipher} 生成 16 位随机密码 (非Base64)..."
+				password=$(< /dev/urandom tr -dc 'a-zA-Z0-9' | head -c 16)
+			fi
+		fi
+
+		if check_password_compatible "${cipher}" "${password}"; then
+			break
+		fi
+
+		echo -e "${Error} 当前密码格式与加密方式 ${cipher} 不兼容！"
+		show_2022_password_rule
+		password=""
+	done
+
 	echo && echo "========================================"
 	echo -e "密码：${Red_font_prefix} ${password} ${Font_color_suffix}"
 	echo "========================================" && echo
@@ -582,7 +624,7 @@ set_password(){
 set_cipher(){
 	echo -e "请选择 Shadowsocks Rust 加密方式
 ========================================	
- ${Green_font_prefix} 1.${Font_color_suffix} aes-128-gcm ${Green_font_prefix}(默认)${Font_color_suffix}
+	 ${Green_font_prefix} 1.${Font_color_suffix} aes-128-gcm ${Green_font_prefix}${Font_color_suffix}
  ${Green_font_prefix} 2.${Font_color_suffix} aes-256-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
  ${Green_font_prefix} 3.${Font_color_suffix} chacha20-ietf-poly1305 ${Green_font_prefix}${Font_color_suffix}
  ${Green_font_prefix} 4.${Font_color_suffix} plain ${Red_font_prefix}(不推荐)${Font_color_suffix}
@@ -598,12 +640,12 @@ set_cipher(){
  ${Tip} AEAD 2022 加密（须v1.15.0及以上版本且密码须经过Base64加密）
 ========================================	
  ${Green_font_prefix}13.${Font_color_suffix} 2022-blake3-aes-128-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
- ${Green_font_prefix}14.${Font_color_suffix} 2022-blake3-aes-256-gcm ${Green_font_prefix}(推荐)${Font_color_suffix}
+	 ${Green_font_prefix}14.${Font_color_suffix} 2022-blake3-aes-256-gcm ${Green_font_prefix}(默认/推荐)${Font_color_suffix}
  ${Green_font_prefix}15.${Font_color_suffix} 2022-blake3-chacha20-poly1305
  ========================================
  ${Tip} 如需其它加密方式请手动修改配置文件 !" && echo
-	read -e -p "(默认: 1. aes-128-gcm)：" cipher
-	[[ -z "${cipher}" ]] && cipher="1"
+	read -e -p "(默认: 14. 2022-blake3-aes-256-gcm)：" cipher
+	[[ -z "${cipher}" ]] && cipher="14"
 	if [[ ${cipher} == "1" ]]; then
 		cipher="aes-128-gcm"
 	elif [[ ${cipher} == "2" ]]; then
@@ -635,7 +677,7 @@ set_cipher(){
 	elif [[ ${cipher} == "15" ]]; then
 		cipher="2022-blake3-chacha20-poly1305"		
 	else
-		cipher="aes-128-gcm"
+		cipher="2022-blake3-aes-256-gcm"
 	fi
 	echo && echo "========================================"
 	echo -e "加密：${Red_background_prefix} ${cipher} ${Font_color_suffix}"
@@ -665,6 +707,12 @@ set_config(){
 	elif [[ "${modify}" == "2" ]]; then
 		read_config
 		set_cipher
+		if ! check_password_compatible "${cipher}" "${password}"; then
+			echo -e "${Error} 当前密码与新加密方式 ${cipher} 不兼容，需先修改密码。"
+			show_2022_password_rule
+			echo -e "${Tip} 现在开始引导你修改密码..."
+			set_password
+		fi
 		port=${port}
 		password=${password}
 		tfo=${tfo}
@@ -690,7 +738,19 @@ set_config(){
 		read_config
 		set_port
 		set_cipher
-		set_password
+		if ! check_password_compatible "${cipher}" "${password}"; then
+			echo -e "${Error} 当前密码与新加密方式 ${cipher} 不兼容，需先修改密码。"
+			show_2022_password_rule
+			echo -e "${Tip} 现在开始引导你修改密码..."
+			set_password
+		else
+			echo -e "${Info} 当前密码与新加密方式兼容。"
+			read -e -p "是否修改密码？[y/N]：" change_password
+			[[ -z "${change_password}" ]] && change_password="n"
+			if [[ ${change_password} == [Yy] ]]; then
+				set_password
+			fi
+		fi
 		set_tfo
 		write_config
 		restart
