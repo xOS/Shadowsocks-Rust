@@ -138,28 +138,40 @@ check_ver_comparison(){
 
 # 官方源
 stable_download() {
-	echo -e "${Info} 默认开始下载官方源 Shadowsocks Rust ……"
-	wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	if [[ ! -e "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz" ]]; then
-		echo -e "${Error} Shadowsocks Rust 官方源下载失败！"
-		return 1 && exit 1
-	else
-		tar -xvf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
-	fi
-	if [[ ! -e "ssserver" ]]; then
-		echo -e "${Error} Shadowsocks Rust 解压失败！"
-		echo -e "${Error} Shadowsocks Rust 安装失败 !"
-		return 1 && exit 1
-	else
-		rm -rf "shadowsocks-${new_ver}.${arch}-unknown-linux-gnu.tar.xz"
+    echo -e "${Info} 默认开始下载官方源 Shadowsocks Rust（musl 静态版）……"
+
+    local ss_target
+    case "${arch}" in
+        arm)
+            ss_target="arm-unknown-linux-musleabihf"
+            ;;
+        *)
+            ss_target="${arch}-unknown-linux-musl"
+            ;;
+    esac
+
+    local pkg="shadowsocks-${new_ver}.${ss_target}.tar.xz"
+    wget --no-check-certificate -N "https://github.com/shadowsocks/shadowsocks-rust/releases/download/${new_ver}/${pkg}"
+    if [[ ! -e "${pkg}" ]]; then
+        echo -e "${Error} Shadowsocks Rust 官方源下载失败！"
+        return 1 && exit 1
+    else
+        tar -xvf "${pkg}"
+    fi
+    if [[ ! -e "ssserver" ]]; then
+        echo -e "${Error} Shadowsocks Rust 解压失败！"
+        echo -e "${Error} Shadowsocks Rust 安装失败 !"
+        return 1 && exit 1
+    else
+        rm -rf "${pkg}"
         chmod +x ssserver
-	    mv -f ssserver "${SS_File}"
-	    rm sslocal ssmanager ssservice ssurl
-	    echo "${new_ver}" > ${SS_Now_ver_File}
+        mv -f ssserver "${SS_File}"
+        rm sslocal ssmanager ssservice ssurl
+        echo "${new_ver}" > ${SS_Now_ver_File}
 
         echo -e "${Info} Shadowsocks Rust 主程序下载安装完毕！"
-		return 0
-	fi
+        return 0
+    fi
 }
 
 # 备用源
@@ -482,7 +494,7 @@ EOF
 		echo -e "${Info} Shadow TLS 配置文件写入成功"
 		
 		# 显示当前配置的 SNI
-		current_sni=$(cat ${STLS_Conf}|jq -r '.server.tls_addr.dispatch | keys[0]' 2>/dev/null)
+		current_sni=$(cat ${STLS_Conf}|jq -r '.server.tls_addr.dispatch | to_entries | map(select(.key != "captive.apple.com")) | .[0].key // "captive.apple.com"' 2>/dev/null)
 		if [[ ! -z "${current_sni}" && "${current_sni}" != "null" ]]; then
 			echo -e "${Info} 当前配置的 SNI: ${Green_font_prefix}${current_sni}${Font_color_suffix}"
 		fi
@@ -504,7 +516,7 @@ read_stls_config(){
 	[[ ! -e ${STLS_Conf} ]] && echo -e "${Error} Shadow TLS 配置文件不存在！" && exit 1
 	stls_port=$(cat ${STLS_Conf}|jq -r '.server.listen' | grep -oE '[0-9]+$')
 	stls_password=$(cat ${STLS_Conf}|jq -r '.server.password')
-	stls_sni=$(cat ${STLS_Conf}|jq -r '.server.tls_addr.dispatch | keys[0]')
+	stls_sni=$(cat ${STLS_Conf}|jq -r '.server.tls_addr.dispatch | to_entries | map(select(.key != "captive.apple.com")) | .[0].key // "captive.apple.com"')
 	stls_fastopen=$(cat ${STLS_Conf}|jq -r '.fastopen')
 	stls_strict=$(cat ${STLS_Conf}|jq -r '.strict')
 	stls_tls_wildcard_sni=$(cat ${STLS_Conf}|jq -r '.server.tls_addr.wildcard_sni')
